@@ -37,6 +37,10 @@ otherwise. Run `make test` and `make contract` first.
 2. To check the expired-login copy: move `data/monarch/tokens.json` aside, `docker compose restart
    monarch-proxy`, and ask Pi for something. Expect ``Monarch login expired. Run `make monarch-login` on the Mac.``
    Restore the file and restart the proxy, or run `make monarch-login`.
+3. To check that a re-login takes effect without a proxy restart: `docker compose stop monarch-proxy`,
+   back up `data/monarch/tokens.json`, replace its `access_token` and `refresh_token` values with
+   junk, and `docker compose start monarch-proxy`. Ask Pi for something and expect the expired-login
+   copy. Run `make monarch-login`, then, WITHOUT restarting the proxy, ask again. Expect a real answer.
 
 ## 6. Records match the session
 

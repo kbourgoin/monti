@@ -95,7 +95,9 @@ def _force_read_scope(url: str) -> str:
     return urlunsplit(parts._replace(query=urlencode(query)))
 
 
-def make_provider(storage: FileTokenStorage, *, interactive: bool) -> OAuthClientProvider:
+def make_provider(
+    storage: FileTokenStorage, *, interactive: bool, server_url: str = MONARCH_MCP_URL
+) -> OAuthClientProvider:
     async def redirect_handler(url: str) -> None:
         if not interactive:
             raise MonarchAuthRequired("Monarch login required")
@@ -112,7 +114,7 @@ def make_provider(storage: FileTokenStorage, *, interactive: bool) -> OAuthClien
         return AuthorizationCodeResult(code=code, state=state)
 
     return OAuthClientProvider(
-        server_url=MONARCH_MCP_URL,
+        server_url=server_url,
         client_metadata=build_client_metadata(),
         storage=storage,
         redirect_handler=redirect_handler,
@@ -129,9 +131,12 @@ async def force_refresh(
     re-authorization), so callers use this to recover. Needs `context.oauth_metadata` for the
     token endpoint, which the SDK's 401 discovery step fills in before it invokes the redirect
     handler. Returns False when there is nothing to refresh with or the server rejects it.
+
+    Storage is always re-read first: the provider lives as long as the proxy, and after a failed
+    refresh the SDK drops its in-memory tokens but never reloads them, so a `make monarch-login`
+    in another process would otherwise go unnoticed until restart.
     """
-    if not provider._initialized:
-        await provider._initialize()
+    await provider._initialize()
     ctx = provider.context
     if ctx.oauth_metadata is None or not ctx.can_refresh_token():
         return False
@@ -143,7 +148,12 @@ async def force_refresh(
     else:
         response = await client.send(request)
         await response.aread()
-    return await provider._handle_refresh_response(response)
+    if await provider._handle_refresh_response(response):
+        return True
+    # As the SDK does after its own failed refresh: reload storage on the next request, so fresh
+    # tokens from a re-login are used directly.
+    provider._initialized = False
+    return False
 
 
 def is_auth_required(exc: BaseException) -> bool:

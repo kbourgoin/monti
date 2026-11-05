@@ -140,3 +140,44 @@ async def test_with_refresh_retry_gives_up_when_refresh_fails(tmp_path):
     async with client:
         with pytest.raises(MonarchAuthRequired):
             await with_refresh_retry(p, op, client=client)
+
+
+async def test_refresh_rereads_storage_after_failed_refresh(tmp_path):
+    # Bogus tokens -> refresh fails (SDK clears in-memory tokens). The owner then runs
+    # `make monarch-login` in another process, which rewrites tokens.json. The same,
+    # long-lived provider must pick the new tokens up without a proxy restart.
+    p, _, _, _ = await _seeded_provider(tmp_path)
+    seen = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen.append(request.content.decode())
+        if "refresh_token=r1" in seen[-1]:
+            return httpx2.Response(400, json={"error": "invalid_grant"})
+        return httpx2.Response(
+            200, json={"access_token": "fresh2", "token_type": "Bearer", "expires_in": 3600}
+        )
+
+    async def failing_op():
+        raise MonarchAuthRequired("401")
+
+    async with httpx2.AsyncClient(transport=httpx2.MockTransport(handler)) as client:
+        with pytest.raises(MonarchAuthRequired):
+            await with_refresh_retry(p, failing_op, client=client)
+
+        await FileTokenStorage(tmp_path / "t.json").set_tokens(
+            OAuthToken(access_token="relogin", token_type="Bearer", refresh_token="r2")
+        )
+
+        calls = []
+
+        async def op():
+            calls.append(
+                p.context.current_tokens.access_token if p.context.current_tokens else None
+            )
+            if len(calls) == 1:
+                raise MonarchAuthRequired("401")
+            return "ok"
+
+        assert await with_refresh_retry(p, op, client=client) == "ok"
+    assert "refresh_token=r2" in seen[-1]
+    assert calls[-1] == "fresh2"

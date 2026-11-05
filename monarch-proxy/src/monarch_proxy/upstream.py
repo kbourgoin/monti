@@ -29,15 +29,22 @@ class Upstream(Protocol):
 
 class MonarchUpstream:
     """One long-lived upstream session. Transport errors reconnect once and retry; an unusable
-    login surfaces as MonarchAuthRequired (after one forced token refresh)."""
+    login surfaces as MonarchAuthRequired (after one forced token refresh).
 
-    def __init__(self, storage: FileTokenStorage) -> None:
+    A 401 inside an open session never reaches the caller as an auth error: the SDK's OAuth flow
+    raises inside the transport's writer task, which tears the session down, and the pending
+    request resolves as a CONNECTION_CLOSED `MCPError`. The session owner task keeps the
+    teardown exception so `_run` can tell an auth failure from a plain dropped connection."""
+
+    def __init__(self, storage: FileTokenStorage, *, url: str = MONARCH_MCP_URL) -> None:
         self._storage = storage
-        self._provider = make_provider(storage, interactive=False)
+        self._url = url
+        self._provider = make_provider(storage, interactive=False, server_url=url)
         self._session: ClientSession | None = None
         self._lock = asyncio.Lock()
         self._runner: asyncio.Task | None = None
         self._stop = asyncio.Event()
+        self._ended_with: BaseException | None = None
 
     async def __aenter__(self) -> Self:
         try:
@@ -63,12 +70,13 @@ class MonarchUpstream:
             raise MonarchAuthRequired("No stored Monarch tokens")
         ready: asyncio.Future[ClientSession] = asyncio.get_running_loop().create_future()
         self._stop = stop = asyncio.Event()
+        self._ended_with = None
 
         async def own() -> None:
             try:
                 async with (
                     create_mcp_http_client(auth=self._provider) as http,
-                    streamable_http_client(MONARCH_MCP_URL, http_client=http) as streams,
+                    streamable_http_client(self._url, http_client=http) as streams,
                     ClientSession(*streams) as session,
                 ):
                     await session.initialize()
@@ -78,6 +86,7 @@ class MonarchUpstream:
                 if not ready.done():
                     ready.set_exception(exc)
                 elif not isinstance(exc, asyncio.CancelledError):
+                    self._ended_with = exc
                     log.debug("upstream session ended: %r", exc)
             finally:
                 self._session = None
@@ -90,23 +99,32 @@ class MonarchUpstream:
             raise
         return self._session
 
-    async def _disconnect(self) -> None:
+    async def _disconnect(self) -> BaseException | None:
+        """Stop the session; return the exception it ended with on its own, if any."""
         runner, self._runner, self._session = self._runner, None, None
         if runner is None:
-            return
+            return None
         self._stop.set()
         try:
             await asyncio.wait_for(runner, timeout=5)
         except (Exception, asyncio.CancelledError) as exc:  # noqa: BLE001
             log.debug("upstream close: %r", exc)
+        ended, self._ended_with = self._ended_with, None
+        return ended
 
     async def _run[T](self, op) -> T:
         async def attempt() -> T:
             async with self._lock:
                 try:
                     return await op(await self._connect())
-                except MCPError:
-                    raise
+                except MCPError as exc:
+                    if exc.code != types.CONNECTION_CLOSED:
+                        raise  # a JSON-RPC error from Monarch itself
+                    ended = await self._disconnect()
+                    if ended is not None and is_auth_required(ended):
+                        raise MonarchAuthRequired("Monarch rejected the access token") from ended
+                    log.info("upstream session closed (%r); reconnecting once", ended)
+                    return await op(await self._connect())
                 except Exception as exc:
                     await self._disconnect()
                     if is_auth_required(exc):
