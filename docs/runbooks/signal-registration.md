@@ -1,4 +1,4 @@
-# Signal registration (Chancellor bot number)
+# Signal registration (Monty bot number)
 
 One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do this before `make up`.
 
@@ -32,7 +32,7 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
 
    ```sh
    curl -X PUT http://127.0.0.1:8080/v1/profiles/$BOT_NUMBER \
-     -H 'Content-Type: application/json' -d '{"name": "Chancellor"}'
+     -H 'Content-Type: application/json' -d '{"name": "Monty"}'
    ```
 6. Remove the override file, then `docker compose down && make up`.
 7. From your personal phone text the bot `hi`. Expect a typing indicator, then

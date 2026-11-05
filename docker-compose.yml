@@ -1,4 +1,4 @@
-name: chancellor
+name: monty
 
 services:
   signal-cli:
