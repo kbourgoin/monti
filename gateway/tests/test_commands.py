@@ -1,5 +1,4 @@
 import pytest
-
 from gateway.commands import Command, parse_command
 
 

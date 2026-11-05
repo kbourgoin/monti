@@ -2,12 +2,11 @@ import sqlite3
 from datetime import datetime
 
 import pytest
-from turn_contract import Health, ToolCall, TurnResponse, Usage
-
 from gateway.agent_client import AgentDown, AgentError, AgentTimeout
 from gateway.config import Settings
 from gateway.router import Inbound, Router, is_owner
 from gateway.store import Store
+from turn_contract import Health, ToolCall, TurnResponse, Usage
 
 OWNER = "+15551112222"
 
