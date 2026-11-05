@@ -17,10 +17,11 @@ services:
       args:
         PACKAGE: gateway
     restart: unless-stopped
-    # From the host env only USERS, the bot number and DEFAULT_AGENT (no env_file, so no API key).
+    # From the host env only USERS, the bot's number/uuid and DEFAULT_AGENT (no env_file, so no API key).
     environment:
       USERS: ${USERS}
       BOT_NUMBER: ${BOT_NUMBER}
+      BOT_UUID: ${BOT_UUID:-}
       DEFAULT_AGENT: ${DEFAULT_AGENT:-pi}
       SIGNAL_URL: http://signal-cli:8080
       AGENTS: echo=http://agent-echo:8201,pi=http://agent-pi:8202,deep=http://agent-deep:8203

@@ -19,3 +19,9 @@ def test_users_parse_and_validate():
             settings(bad)
     with pytest.raises(ValueError):
         load_settings(BASE)
+
+
+def test_bot_uuid_optional():
+    assert settings("Keith=+16175550100").bot_uuid is None
+    assert load_settings({**BASE, "USERS": "Keith=+16175550100", "BOT_UUID": ""}).bot_uuid is None
+    assert load_settings({**BASE, "USERS": "Keith=+16175550100", "BOT_UUID": " u-bot "}).bot_uuid == "u-bot"

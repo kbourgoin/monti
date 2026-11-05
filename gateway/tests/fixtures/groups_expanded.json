@@ -1,0 +1,38 @@
+[
+  {
+    "name": "Money",
+    "description": "",
+    "id": "group.VWlSSXlHOUNJTS83ZnZUUktBRVFGNlF3QzdSVGtINXFRRVczdWlFUmpwOD0=",
+    "internal_id": "UiRIyG9CIM/7fvTRKAEQF6QwC7RTkH5qQEW3uiERjp8=",
+    "members": [
+      {"number": "+16175550100", "uuid": "uuid-keith"},
+      {"number": "", "uuid": "uuid-alex"},
+      {"number": "+15553334444", "uuid": "uuid-bot"}
+    ],
+    "blocked": false,
+    "member": true,
+    "pending_invites": [],
+    "pending_requests": [],
+    "invite_link": "",
+    "admins": [{"number": "+16175550100", "uuid": "uuid-keith"}],
+    "permissions": {"add_members": "only-admins", "edit_group": "only-admins", "send_messages": "every-member"}
+  },
+  {
+    "name": "Book club",
+    "description": "",
+    "id": "group.bVVVcEUvaG9WRExBZ0hWRlRCNTZyYlBWUVNxWmMrcnBNUjBEQUFyVDBTUT0=",
+    "internal_id": "mUUpE/hoVDLAgHVFTB56rbPVQSqZc+rpMR0DAArT0SQ=",
+    "members": [
+      {"number": "+16175550100", "uuid": "uuid-keith"},
+      {"number": "+16175559999", "uuid": "uuid-outsider"},
+      {"number": "+15553334444", "uuid": "uuid-bot"}
+    ],
+    "blocked": false,
+    "member": true,
+    "pending_invites": [],
+    "pending_requests": [],
+    "invite_link": "",
+    "admins": [],
+    "permissions": {"add_members": "only-admins", "edit_group": "only-admins", "send_messages": "every-member"}
+  }
+]

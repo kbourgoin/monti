@@ -12,7 +12,7 @@ create table if not exists sessions (
     primary key (chat_id, agent));
 create table if not exists turns (
     id integer primary key autoincrement,
-    chat_id text not null default '', sender_name text not null default '',
+    chat_id text not null, sender_name text not null,
     session_id text not null, agent text not null, inbound text not null, reply text,
     started_at text not null, finished_at text not null, status text not null,
     tool_calls text not null, input_tokens integer not null, output_tokens integer not null);
@@ -40,22 +40,7 @@ class Store:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         self._db = sqlite3.connect(path)
-        self._migrate_owner_schema()
         self._db.executescript(_SCHEMA)
-        self._db.commit()
-
-    def _migrate_owner_schema(self) -> None:
-        """v1 databases keyed state by `owner`; carry it over as `dm:<number>` chat ids."""
-        for table in ("active_agent", "sessions"):
-            cols = [r[1] for r in self._db.execute(f"pragma table_info({table})")]
-            if "owner" in cols:
-                self._db.execute(f"alter table {table} rename column owner to chat_id")
-                self._db.execute(f"update {table} set chat_id='dm:'||chat_id")
-        cols = [r[1] for r in self._db.execute("pragma table_info(turns)")]
-        if cols:
-            for col in ("chat_id", "sender_name"):
-                if col not in cols:
-                    self._db.execute(f"alter table turns add column {col} text not null default ''")
         self._db.commit()
 
     def active_agent(self, chat_id: str) -> str | None:

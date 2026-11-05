@@ -32,22 +32,10 @@ def test_log_turn(tmp_path):
     assert rows == [("s", "ok", 3)]
 
 
-def test_migrates_v1_owner_schema(tmp_path):
+def test_turns_schema_requires_chat_and_sender(tmp_path):
     p = tmp_path / "g.db"
-    c = sqlite3.connect(p)
-    c.executescript(
-        "create table active_agent (owner text primary key, agent text not null);"
-        "create table sessions (owner text not null, agent text not null, session_id text not null,"
-        " primary key (owner, agent));"
-        "create table turns (id integer primary key autoincrement, session_id text not null,"
-        " agent text not null, inbound text not null, reply text, started_at text not null,"
-        " finished_at text not null, status text not null, tool_calls text not null,"
-        " input_tokens integer not null, output_tokens integer not null);"
-        "insert into active_agent values('+1', 'deep');"
-        "insert into sessions values('+1', 'deep', 'sid');"
-    )
-    c.commit()
-    c.close()
-    s = Store(p)
-    assert s.active_agent("dm:+1") == "deep" and s.current_session("dm:+1", "deep") == "sid"
-    s.log_turn(TurnRecord("dm:+1", "Keith", "sid", "deep", "hi", "yo", "t0", "t1", "ok", [], 1, 2))
+    Store(p)
+    cols = {r[1]: r for r in sqlite3.connect(p).execute("pragma table_info(turns)")}
+    for col in ("chat_id", "sender_name"):
+        _, _, _, notnull, default, _ = cols[col]
+        assert notnull == 1 and default is None

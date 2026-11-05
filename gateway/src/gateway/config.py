@@ -24,6 +24,7 @@ class Settings:
     turn_timeout_s: float = 120
     split_limit: int = 1500
     tz: str = "America/New_York"
+    bot_uuid: str | None = None
 
 
 def _parse_agents(raw: str) -> dict[str, str]:
@@ -72,4 +73,5 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         agents=agents,
         default_agent=default_agent,
         db_path=Path(env.get("DB_PATH", "data/gateway/gateway.db")),
+        bot_uuid=env.get("BOT_UUID", "").strip() or None,
     )

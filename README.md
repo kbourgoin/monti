@@ -1,15 +1,17 @@
 # Monty
 
-Monty is your butterfly friend you text for money advice. It is a personal Signal bot that
-answers questions about your Monarch Money finances. You text the bot's number from your own
-phone, a gateway forwards the message to one of three interchangeable agents (echo, Pi, or
-deepagents), and the agent reads your data through a read-only Monarch MCP proxy.
+Monty is your butterfly friend you text for money advice. It is a household Signal bot that
+answers questions about your Monarch Money finances. The people listed in `USERS` text the bot's
+number, directly or in a Signal group with it; a gateway forwards each message to one of three
+interchangeable agents (echo, Pi, or deepagents), and the agent reads the household's data through
+a read-only Monarch MCP proxy.
 
 ```
 Signal -> signal-cli -> gateway -> agent-echo | agent-pi | agent-deep -> monarch-proxy -> Monarch
 ```
 
-Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`.
+Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`, amended by
+`docs/superpowers/specs/2026-11-05-monty-chats-and-mise-design.md` (users, chats, groups).
 
 ## Prerequisites
 
@@ -21,9 +23,10 @@ Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`.
 
 ## Setup
 
-1. Configure: `cp .env.example .env`, then fill in `ANTHROPIC_API_KEY`, `OWNER_NUMBER` (your
-   personal number, E.164), `OWNER_UUID` (optional), `BOT_NUMBER` (the bot's number), and
-   optionally `MODEL` and `DEFAULT_AGENT` (`echo`, `pi` or `deep`).
+1. Configure: `cp .env.example .env`, then fill in `ANTHROPIC_API_KEY`, `USERS` (see below),
+   `BOT_NUMBER` (the bot's number, E.164), and optionally `BOT_UUID`, `MODEL` and
+   `DEFAULT_AGENT` (`echo`, `pi` or `deep`). `OWNER_NUMBER` and `OWNER_UUID` are gone: if your
+   `.env` predates `USERS`, replace them with a `USERS` line, or the gateway won't start.
 2. Log in to Monarch: `mise run monarch-login`. It opens the OAuth flow (loopback on port 8765) and
    stores tokens in `data/monarch/tokens.json`. Check them later, non-interactively, with
    `uv run monarch-login --check`.
@@ -32,6 +35,36 @@ Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`.
 
 Then text the bot `hi` from your own phone. `docs/runbooks/manual-checks.md` is the full
 acceptance script.
+
+### Users
+
+`USERS` lists everyone Monty answers, comma-separated, as `Name=+E164[/uuid]`:
+
+```sh
+USERS=Keith=+16175550100,Alex=+16175550101/0b8a3c1e-1d2f-4a5b-9c6d-7e8f9a0b1c2d
+```
+
+The name is what the agent sees on each message's `From:` line. The uuid (the person's Signal
+ACI) is optional; add it if someone's messages arrive without a phone number (for example
+because they hide their number from people who don't have it). Anyone not listed gets no reply.
+
+### Chats and groups
+
+Each DM with Monty and each group Monty is in is its own chat, with its own agent, session and
+memory. `/agent`, `/new` and `/which` apply to the chat you send them in; in a group, whoever
+sends a command changes it for everyone there. Monty answers every message in an allowed group
+(no mention needed). Chats run independently: a slow answer in one doesn't hold up another, and
+messages in one chat are answered in order.
+
+To use Monty in a group, add the bot's number to a Signal group like any other contact. A group
+of just you and Monty works as a separate thread. See `docs/runbooks/signal-registration.md`.
+
+**Group security rule.** Monty speaks in a group only when every member other than Monty is in
+`USERS`, because its answers show the household's finances to everyone there. If anyone else is in
+the group, or has been invited to it, Monty stays silent, even when someone on the list writes.
+Membership is checked fail-closed: if signal-cli can't list the group's members (error, timeout,
+unknown group, a member it can't identify), Monty stays silent and logs why. Membership is cached
+for 60 seconds per group and refreshed when the group changes.
 
 ## Signal commands
 
@@ -53,8 +86,9 @@ run `mise run monarch-login` on the Mac again.
 
 ## Where things live
 
-- `data/gateway/gateway.db`: SQLite. The `turns` table has one row per question (agent, session,
-  inbound, reply, status, tool calls, tokens).
+- `data/gateway/gateway.db`: SQLite. The `turns` table has one row per question (chat, sender,
+  agent, session, inbound, reply, status, tool calls, tokens). The schema has no migrations:
+  clear `data/gateway/` when upgrading from the single-owner version.
 - `data/logs/monarch-calls.jsonl`: one line per Monarch tool call (tool, args, ms, ok, size;
   never the results).
 - `data/agents/pi/<session_id>/` and `data/agents/deep/checkpoints.db`: agent session state.
@@ -67,7 +101,8 @@ run `mise run monarch-login` on the Mac again.
 
 - Monarch access is the read-only `mcp:read` OAuth scope, and the proxy exposes only a
   17-tool read allowlist and refuses everything else.
-- The bot answers only `OWNER_NUMBER` in direct messages. Other senders and groups get no reply.
+- The bot answers only people in `USERS`. In a group it also requires every other member to be
+  in `USERS` (fail-closed, see above). Everyone else gets no reply.
 - Pi is created with zero built-in tools (no bash, read, write or edit); its only tools are the
   Monarch ones.
 - deepagents uses its in-memory backend only, never a host-filesystem backend.
