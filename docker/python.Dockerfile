@@ -6,6 +6,7 @@ COPY pyproject.toml uv.lock ./
 COPY contract ./contract
 COPY monarch-proxy ./monarch-proxy
 COPY agents/echo ./agents/echo
+COPY agents/deep ./agents/deep
 COPY gateway ./gateway
 RUN uv sync --package ${PACKAGE} --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"

@@ -1,0 +1,25 @@
+[project]
+name = "agent-deep"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "uvicorn",
+  "turn-contract",
+  "deepagents",
+  "langchain-anthropic",
+  "langgraph-checkpoint-sqlite",
+]
+
+[project.scripts]
+agent-deep = "agent_deep.app:main"
+
+[tool.uv.sources]
+turn-contract = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agent_deep"]
