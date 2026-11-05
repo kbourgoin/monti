@@ -8,6 +8,7 @@ from typing import Any
 
 from mcp import types
 from mcp.server.lowlevel import Server
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.shared.exceptions import MCPError
 from turn_contract import AUTH_ERROR_MARKER
 
@@ -57,6 +58,21 @@ def build_server(upstream: Upstream, call_log: CallLog) -> Server:
     return Server("monarch-proxy", on_list_tools=on_list_tools, on_call_tool=on_call_tool)
 
 
+# The proxy is unauthenticated and its port is published on the Mac, so Host/Origin checks
+# (DNS-rebinding protection) are always on. The SDK only enables them for loopback binds, and
+# compose binds 0.0.0.0. Agents reach it as monarch-proxy:8100 (compose) or 127.0.0.1 (local).
+TRANSPORT_SECURITY = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=["127.0.0.1:*", "localhost:*", "[::1]:*", "monarch-proxy:*"],
+    allowed_origins=["http://127.0.0.1:*", "http://localhost:*", "http://[::1]:*"],
+)
+
+
+def build_app(server: Server, *, host: str):
+    """The Streamable HTTP ASGI app that `serve()` runs."""
+    return server.streamable_http_app(host=host, transport_security=TRANSPORT_SECURITY)
+
+
 async def serve() -> None:
     import uvicorn
 
@@ -67,7 +83,7 @@ async def serve() -> None:
     call_log = CallLog(Path(os.environ.get("MONARCH_CALL_LOG", DEFAULT_CALL_LOG)))
     host = os.environ.get("PROXY_HOST", "127.0.0.1")
     async with MonarchUpstream(FileTokenStorage(tokens)) as upstream:
-        app = build_server(upstream, call_log).streamable_http_app(host=host)
+        app = build_app(build_server(upstream, call_log), host=host)
         await uvicorn.Server(uvicorn.Config(app, host=host, port=8100)).serve()
 
 
