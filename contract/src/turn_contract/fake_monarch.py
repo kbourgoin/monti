@@ -29,7 +29,7 @@ TOOLS = [
     types.Tool(name="GetAccounts", description="List accounts.", input_schema=_SCHEMA),
     types.Tool(name="GetTransactions", description="List transactions.", input_schema=_SCHEMA),
 ]
-AUTH_TEXT = f"{AUTH_ERROR_MARKER}: run make monarch-login"
+AUTH_TEXT = f"{AUTH_ERROR_MARKER}: run mise run monarch-login"
 
 
 def build_app() -> Starlette:

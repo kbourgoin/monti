@@ -57,5 +57,5 @@ def main() -> None:
     except BaseException as exc:
         if not is_auth_required(exc):
             raise
-        print("Monarch login expired. Run `make monarch-login` on the Mac.", file=sys.stderr)
+        print("Monarch login expired. Run `mise run monarch-login` on the Mac.", file=sys.stderr)
         sys.exit(1)

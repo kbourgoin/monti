@@ -19,7 +19,7 @@ node_ok() {
   node -e 'const [a,b]=process.versions.node.split(".").map(Number);process.exit(a>=24||(a===23&&b>=8)||(a===22&&b>=19)?0:1)'
 }
 if ! node_ok; then
-  echo "agent-pi needs Node >= 22.19; try \`nvm install 22\` (found: $(node --version 2>/dev/null || echo none))" >&2
+  echo "agent-pi needs Node >= 22.19; run \`mise install\` and use \`mise run contract\` (found: $(node --version 2>/dev/null || echo none))" >&2
   exit 1
 fi
 

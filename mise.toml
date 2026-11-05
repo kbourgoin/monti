@@ -1,0 +1,31 @@
+[tools]
+node = "22"
+python = "3.13"
+uv = "latest"
+
+[tasks.monarch-login]
+description = "Log in to Monarch (OAuth)"
+run = "uv run monarch-login"
+
+[tasks.test]
+description = "Run unit tests for every Python package"
+run = "uv run pytest"
+
+[tasks.contract]
+description = "Run the agent contract suite against echo, pi and deep"
+run = "./scripts/contract.sh"
+
+[tasks.up]
+description = "Build and start everything"
+run = [
+  "mkdir -p data/signal data/gateway data/monarch data/logs data/agents/pi data/agents/deep",
+  "docker compose up -d --build",
+]
+
+[tasks.down]
+description = "Stop everything"
+run = "docker compose down"
+
+[tasks.logs]
+description = "Follow logs"
+run = "docker compose logs -f --tail=100"

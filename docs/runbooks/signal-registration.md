@@ -1,6 +1,6 @@
 # Signal registration (Monty bot number)
 
-One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do this before `make up`.
+One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do this before `mise run up`.
 
 1. Fill in `.env` (copy `.env.example`): `OWNER_NUMBER` (your personal number) and `BOT_NUMBER`,
    both E.164 like `+16175550100`.

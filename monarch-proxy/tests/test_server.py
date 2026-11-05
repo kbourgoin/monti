@@ -68,7 +68,7 @@ async def test_auth_failure_returns_marker(fake, tmp_path):
     async with connect(fake, tmp_path) as client:
         r = await client.call_tool("GetAccounts", {})
     assert r.is_error and AUTH_ERROR_MARKER in r.content[0].text
-    assert r.content[0].text == "MONARCH_AUTH_REQUIRED: run make monarch-login"
+    assert r.content[0].text == "MONARCH_AUTH_REQUIRED: run mise run monarch-login"
     line = json.loads((tmp_path / "calls.jsonl").read_text().splitlines()[-1])
     assert line["ok"] is False
 

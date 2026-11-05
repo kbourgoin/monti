@@ -11,7 +11,7 @@ pinned exactly because the SDK changes quickly.
 
 - Node >= 22.19 (Pi's `engines` field). Node 23.0-23.7 do not work: Pi's undici needs
   `zlib.createZstdDecompress`. The source runs directly with Node's type stripping
-  (`node src/server.ts`), so there is no build step.
+  (`node src/server.ts`), so there is no build step. `mise install` at the repo root provides a suitable Node.
 - `npm ci`, then `npm test` (vitest). Tests start the repo's fake Monarch (`uv run fake-monarch`)
   on port 8191 and use Pi's faux model provider, so they make no LLM calls.
 - `npm run typecheck` runs tsc.

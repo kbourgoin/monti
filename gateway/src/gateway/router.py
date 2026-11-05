@@ -12,7 +12,7 @@ from .formatting import split_reply
 from .store import Store, TurnRecord
 
 TIMEOUT_COPY = "That took too long. Try again or /new."
-AUTH_COPY = "Monarch login expired. Run `make monarch-login` on the Mac."
+AUTH_COPY = "Monarch login expired. Run `mise run monarch-login` on the Mac."
 HELP = (
     "Commands:\n"
     "/agent <name> - switch agent\n"

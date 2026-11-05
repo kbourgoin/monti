@@ -150,7 +150,7 @@ async def test_down_copy(r, fake, settings):
 
 async def test_monarch_auth_copy(r, fake):
     fake.exc = AgentError("monarch_auth", "expired")
-    assert await r.handle(inb()) == ["Monarch login expired. Run `make monarch-login` on the Mac."]
+    assert await r.handle(inb()) == ["Monarch login expired. Run `mise run monarch-login` on the Mac."]
 
 
 async def test_other_error_copy_and_logged(r, fake, settings):

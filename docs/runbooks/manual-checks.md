@@ -1,7 +1,7 @@
 # Manual acceptance checks
 
-Run once after `make up` (see `README.md` for setup). Use your owner phone unless a step says
-otherwise. Run `make test` and `make contract` first.
+Run once after `mise run up` (see `README.md` for setup). Use your owner phone unless a step says
+otherwise. Run `mise run test` and `mise run contract` first.
 
 ## 1. Basics (echo)
 
@@ -35,12 +35,12 @@ otherwise. Run `make test` and `make contract` first.
 1. `docker compose stop agent-pi`, switch to `/agent pi`, and send a message. Expect
    `The pi agent is down.` Then `docker compose start agent-pi`.
 2. To check the expired-login copy: move `data/monarch/tokens.json` aside, `docker compose restart
-   monarch-proxy`, and ask Pi for something. Expect ``Monarch login expired. Run `make monarch-login` on the Mac.``
-   Restore the file and restart the proxy, or run `make monarch-login`.
+   monarch-proxy`, and ask Pi for something. Expect ``Monarch login expired. Run `mise run monarch-login` on the Mac.``
+   Restore the file and restart the proxy, or run `mise run monarch-login`.
 3. To check that a re-login takes effect without a proxy restart: `docker compose stop monarch-proxy`,
    back up `data/monarch/tokens.json`, replace its `access_token` and `refresh_token` values with
    junk, and `docker compose start monarch-proxy`. Ask Pi for something and expect the expired-login
-   copy. Run `make monarch-login`, then, WITHOUT restarting the proxy, ask again. Expect a real answer.
+   copy. Run `mise run monarch-login`, then, WITHOUT restarting the proxy, ask again. Expect a real answer.
 
 ## 6. Records match the session
 

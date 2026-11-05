@@ -133,7 +133,7 @@ async def force_refresh(
     handler. Returns False when there is nothing to refresh with or the server rejects it.
 
     Storage is always re-read first: the provider lives as long as the proxy, and after a failed
-    refresh the SDK drops its in-memory tokens but never reloads them, so a `make monarch-login`
+    refresh the SDK drops its in-memory tokens but never reloads them, so a `mise run monarch-login`
     in another process would otherwise go unnoticed until restart.
     """
     await provider._initialize()

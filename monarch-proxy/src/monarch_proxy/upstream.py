@@ -53,7 +53,7 @@ class MonarchUpstream:
         except Exception as exc:
             if not is_auth_required(exc):
                 raise
-            log.warning("Monarch login unusable at startup; run `make monarch-login`")
+            log.warning("Monarch login unusable at startup; run `mise run monarch-login`")
         return self
 
     async def __aexit__(self, *exc_info) -> None:

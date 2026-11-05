@@ -13,11 +13,10 @@ Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`.
 
 ## Prerequisites
 
-- Docker (Compose v2) for `make up`.
-- [uv](https://docs.astral.sh/uv/) for the Python packages and `make monarch-login`, `make test`, `make contract`.
-- Node >= 22.19, only if you run the Pi agent outside Docker (including `make contract`). Node
-  23.0 to 23.7 will not work (no zstd in zlib); try `nvm install 22`. Docker builds Pi with
-  its own Node.
+- Docker (Compose v2) for `mise run up`.
+- [mise](https://mise.jdx.dev/): run `mise install` once. It provides Node 22 (Pi needs >= 22.19),
+  Python 3.13 and uv, and runs the tasks below (`mise run monarch-login`, `test`, `contract`,
+  `up`, `down`, `logs`). Docker builds Pi with its own Node.
 - A Signal number for the bot (a spare SIM) and an Anthropic API key.
 
 ## Setup
@@ -25,11 +24,11 @@ Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`.
 1. Configure: `cp .env.example .env`, then fill in `ANTHROPIC_API_KEY`, `OWNER_NUMBER` (your
    personal number, E.164), `OWNER_UUID` (optional), `BOT_NUMBER` (the bot's number), and
    optionally `MODEL` and `DEFAULT_AGENT` (`echo`, `pi` or `deep`).
-2. Log in to Monarch: `make monarch-login`. It opens the OAuth flow (loopback on port 8765) and
+2. Log in to Monarch: `mise run monarch-login`. It opens the OAuth flow (loopback on port 8765) and
    stores tokens in `data/monarch/tokens.json`. Check them later, non-interactively, with
    `uv run monarch-login --check`.
 3. Register the bot's Signal number: follow `docs/runbooks/signal-registration.md`.
-4. Start everything: `make up`. Use `make logs` to follow logs and `make down` to stop.
+4. Start everything: `mise run up`. Use `mise run logs` to follow logs and `mise run down` to stop.
 
 Then text the bot `hi` from your own phone. `docs/runbooks/manual-checks.md` is the full
 acceptance script.
@@ -42,12 +41,12 @@ acceptance script.
 - `/help` lists the commands.
 
 Anything else is a question for the current agent. If Monarch login expires, Monty says so;
-run `make monarch-login` on the Mac again.
+run `mise run monarch-login` on the Mac again.
 
 ## Development
 
-- `make test` runs the unit tests for every Python package.
-- `make contract` starts fake-monarch and each agent locally and runs the contract suite
+- `mise run test` runs the unit tests for every Python package.
+- `mise run contract` starts fake-monarch and each agent locally and runs the contract suite
   (`contract/tests`) against echo, Pi and deep. It loads `.env` if present and runs the LLM
   tests only when `ANTHROPIC_API_KEY` is set (otherwise it says so and runs the rest). Pi's
   own tests: `cd agents/pi && npm ci && npm test`.

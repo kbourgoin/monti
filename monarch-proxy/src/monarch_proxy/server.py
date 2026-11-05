@@ -31,7 +31,7 @@ def build_server(upstream: Upstream, call_log: CallLog) -> Server:
         try:
             upstream_tools = await upstream.list_tools()
         except MonarchAuthRequired:
-            raise MCPError(types.INTERNAL_ERROR, f"{AUTH_ERROR_MARKER}: run make monarch-login")
+            raise MCPError(types.INTERNAL_ERROR, f"{AUTH_ERROR_MARKER}: run mise run monarch-login")
         tools = [t for t in upstream_tools if is_allowed(t.name)]
         return types.ListToolsResult(tools=tools)
 
@@ -50,7 +50,7 @@ def build_server(upstream: Upstream, call_log: CallLog) -> Server:
         try:
             return finish(await upstream.call_tool(name, args))
         except MonarchAuthRequired:
-            return finish(_error(f"{AUTH_ERROR_MARKER}: run make monarch-login"))
+            return finish(_error(f"{AUTH_ERROR_MARKER}: run mise run monarch-login"))
         except Exception:
             log.exception("upstream call failed: %s", name)
             return finish(_error(f"Upstream error calling {name}."))

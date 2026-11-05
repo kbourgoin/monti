@@ -145,7 +145,7 @@ async def test_with_refresh_retry_gives_up_when_refresh_fails(tmp_path):
 
 async def test_refresh_rereads_storage_after_failed_refresh(tmp_path):
     # Bogus tokens -> refresh fails (SDK clears in-memory tokens). The owner then runs
-    # `make monarch-login` in another process, which rewrites tokens.json. The same,
+    # `mise run monarch-login` in another process, which rewrites tokens.json. The same,
     # long-lived provider must pick the new tokens up without a proxy restart.
     p, _, _, _ = await _seeded_provider(tmp_path)
     seen = []
