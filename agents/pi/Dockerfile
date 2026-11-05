@@ -1,9 +1,11 @@
+# Build context: the repo root (so the image can carry prompts/).
 FROM node:22-bookworm-slim
 WORKDIR /app
 ENV NODE_ENV=production
-COPY package.json package-lock.json ./
+COPY agents/pi/package.json agents/pi/package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
-COPY src ./src
-# Sessions and the prompt are mounted at run time (see docker-compose.yml).
+COPY agents/pi/src ./src
+# The shared system prompt; a run-time mount over /app/prompts overrides it (see docker-compose.yml).
+COPY prompts ./prompts
 USER node
 CMD ["node", "src/server.ts"]

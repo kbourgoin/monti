@@ -46,7 +46,8 @@ services:
 
   agent-pi:
     build:
-      context: ./agents/pi
+      context: .
+      dockerfile: agents/pi/Dockerfile
     restart: unless-stopped
     # From the host env only ANTHROPIC_API_KEY and MODEL (no env_file).
     environment:

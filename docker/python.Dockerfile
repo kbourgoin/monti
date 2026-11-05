@@ -8,6 +8,7 @@ COPY monarch-proxy ./monarch-proxy
 COPY agents/echo ./agents/echo
 COPY agents/deep ./agents/deep
 COPY gateway ./gateway
+COPY prompts ./prompts
 RUN uv sync --package ${PACKAGE} --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
 CMD ["sh", "-c", "exec $PACKAGE"]
