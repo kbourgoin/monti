@@ -20,14 +20,15 @@ services:
     env_file: .env
     environment:
       SIGNAL_URL: http://signal-cli:8080
-      DEFAULT_AGENT: echo
-      AGENTS: echo=http://agent-echo:8201
+      DEFAULT_AGENT: pi
+      AGENTS: echo=http://agent-echo:8201,pi=http://agent-pi:8202
       DB_PATH: /app/data/gateway.db
     volumes:
       - ./data:/app/data
     depends_on:
       - signal-cli
       - agent-echo
+      - agent-pi
 
   agent-echo:
     build:
@@ -38,6 +39,24 @@ services:
     restart: unless-stopped
     environment:
       AGENT_HOST: 0.0.0.0
+
+  agent-pi:
+    build:
+      context: ./agents/pi
+    restart: unless-stopped
+    # From the host env only ANTHROPIC_API_KEY and MODEL (no env_file).
+    environment:
+      AGENT_HOST: 0.0.0.0
+      MONARCH_MCP_URL: http://monarch-proxy:8100/mcp
+      PI_DATA_DIR: /app/data/agents/pi
+      SYSTEM_PROMPT_PATH: /app/prompts/system.md
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      MODEL: ${MODEL:-claude-sonnet-5-5}
+    volumes:
+      - ./data/agents/pi:/app/data/agents/pi
+      - ./prompts:/app/prompts:ro
+    depends_on:
+      - monarch-proxy
 
   monarch-proxy:
     build:

@@ -7,7 +7,7 @@ test:
 	uv run pytest
 
 up:
-	mkdir -p data/signal data/monarch data/logs
+	mkdir -p data/signal data/monarch data/logs data/agents/pi
 	docker compose up -d --build
 
 down:
