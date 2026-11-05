@@ -1,0 +1,23 @@
+[project]
+name = "mm-text"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = ["monarch-proxy", "turn-contract"]
+
+[tool.uv.workspace]
+members = ["contract", "monarch-proxy"]
+
+[dependency-groups]
+dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["monarch-proxy/tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.uv.sources]
+monarch-proxy = { workspace = true }
+turn-contract = { workspace = true }
