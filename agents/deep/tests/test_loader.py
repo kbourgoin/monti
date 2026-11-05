@@ -77,4 +77,4 @@ async def test_build_agent_passes_no_backend(monkeypatch):
     assert seen["model"] == "model:anthropic:m"
     assert seen["checkpointer"] == "cp"
     assert [t.name for t in seen["tools"]] == ["GetAccounts"]
-    assert "Monty" in seen["system_prompt"]
+    assert "Monti" in seen["system_prompt"]

@@ -17,7 +17,7 @@ from monarch_proxy.tokens import FileTokenStorage
 
 def test_metadata_is_read_only():
     m = build_client_metadata()
-    assert m.client_name == "Monty (read-only)"
+    assert m.client_name == "Monti (read-only)"
     assert m.scope == "mcp:read"
     assert [str(u) for u in m.redirect_uris] == ["http://127.0.0.1:8765/callback"]
     assert m.token_endpoint_auth_method == "none"

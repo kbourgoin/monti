@@ -194,7 +194,7 @@ async def test_group_uuid_only_sender(settings):
 @pytest.mark.parametrize(
     "members, pending, is_member, expected",
     [
-        ([M(KEITH), M(BOT)], [], True, True),  # Keith and Monty alone
+        ([M(KEITH), M(BOT)], [], True, True),  # Keith and Monti alone
         ([M(KEITH), M(None, "uuid-alex"), M(BOT)], [], True, True),
         # A bot uuid that settings don't know is an outsider.
         ([M(KEITH), M(None, "uuid-bot2")], [], True, False),
@@ -203,7 +203,7 @@ async def test_group_uuid_only_sender(settings):
         ([M(KEITH), M("+16175550111", "uuid-alex"), M(BOT)], [], True, False),
         ([M(KEITH), M(BOT)], [M(None, "uuid-stranger")], True, False),  # outsider invited
         ([M(KEITH), M(BOT)], [M(ALEX)], True, True),  # user invited
-        ([M(KEITH), M(BOT)], [], False, False),  # Monty is not (yet) a member
+        ([M(KEITH), M(BOT)], [], False, False),  # Monti is not (yet) a member
         ([M(BOT)], [], True, True),
     ],
 )
@@ -262,7 +262,7 @@ async def test_update_invalidates_membership_cache(settings):
 
 
 async def test_invite_ignored_when_outsider_is_member(settings):
-    # An outsider made the group and invited Monty; Keith's later rename must not make Monty join.
+    # An outsider made the group and invited Monti; Keith's later rename must not make Monti join.
     sig = FakeSignal([GroupInfo(G1, [M(KEITH), M(OUTSIDER)], False, [M(BOT)])])
     events = GroupEvents(sig, settings, MembershipGate(sig, settings))
     await events.on_update(GroupUpdate(KEITH, "uuid-keith", G1))
@@ -277,7 +277,7 @@ async def test_invite_ignored_when_outsider_also_pending(settings):
 
 
 async def test_no_join_when_bot_not_pending(settings):
-    # e.g. a user removed Monty: not a member, and not invited either.
+    # e.g. a user removed Monti: not a member, and not invited either.
     sig = FakeSignal([GroupInfo(G1, [M(KEITH), M(None, "uuid-alex")], False, [])])
     events = GroupEvents(sig, settings, MembershipGate(sig, settings))
     await events.on_update(GroupUpdate(KEITH, "uuid-keith", G1))

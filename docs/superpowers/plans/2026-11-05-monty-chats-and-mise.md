@@ -1,8 +1,8 @@
-# Monty Chats & mise Implementation Plan
+# Monti Chats & mise Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Several people use Monty in DMs and groups, each chat its own conversation, and the repo uses mise instead of make.
+**Goal:** Several people use Monti in DMs and groups, each chat its own conversation, and the repo uses mise instead of make.
 
 **Architecture:** The gateway identifies a *chat* (`dm:<E164>` or `group:<id>`) for every inbound message, admits it per the `USERS` list and group membership (fail-closed), and keys active-agent and session state by chat. Per-chat queues and workers give in-order handling within a chat and concurrency across chats. The turn contract gains `sender_name`, rendered as a `From:` line by every agent.
 
@@ -24,8 +24,8 @@
 
 ## Review Focus
 
-1. A group where a non-user is present: Monty is silent even when a user writes. Tested in Task 4 (`test_group_with_outsider_silent`).
-2. The group member lookup fails or times out: Monty is silent and the failure is logged. Tested in Task 4 (`test_group_lookup_failure_silent`).
+1. A group where a non-user is present: Monti is silent even when a user writes. Tested in Task 4 (`test_group_with_outsider_silent`).
+2. The group member lookup fails or times out: Monti is silent and the failure is logged. Tested in Task 4 (`test_group_lookup_failure_silent`).
 3. A slow turn in chat A doesn't delay chat B, and two quick messages in chat A are answered in order. Tested in Task 4 (`test_chats_concurrent_messages_ordered`).
 4. `/agent deep` in group G1 doesn't change the agent in group G2 or in the DM. Tested in Task 3 (`test_commands_are_per_chat`).
 5. The sender has a UUID but no number, in a group. Matched by UUID and admitted only if every member is a user. Tested in Task 4 (`test_group_uuid_only_sender`).
@@ -58,7 +58,7 @@
   - Echo unit test: the new reply format.
 - [ ] **Step 2:** Run them and expect FAIL: `uv run pytest contract agents/echo -q` and `cd agents/pi && npx vitest run` (through mise's Node).
 - [ ] **Step 3:** Implement across the model, the formatter, echo, pi and deep. Every agent must call the formatter with `sender_name`.
-- [ ] **Step 4:** Rewrite `prompts/system.md` per the spec's System prompt section. "Monty" appears once, on line 1, and no person's name is hard-coded.
+- [ ] **Step 4:** Rewrite `prompts/system.md` per the spec's System prompt section. "Monti" appears once, on line 1, and no person's name is hard-coded.
 - [ ] **Step 5:** Run them again and expect PASS, then `mise run contract` (now echo 5 + 4 skipped, pi 9, deep 9).
 - [ ] **Step 6:** Commit `feat(contract): sender_name / From line across agents; household prompt`.
 
@@ -91,7 +91,7 @@
 
 ### Task 4: Groups, membership gate and per-chat concurrency
 
-**Files:** `gateway/src/gateway/{signal_client,groups,app}.py` (new `groups.py`), tests and fixtures, `docs/runbooks/signal-registration.md` (adding Monty to a group, invites), `docs/runbooks/manual-checks.md` (the spec's new checks), `README.md` (USERS, groups, security rule).
+**Files:** `gateway/src/gateway/{signal_client,groups,app}.py` (new `groups.py`), tests and fixtures, `docs/runbooks/signal-registration.md` (adding Monti to a group, invites), `docs/runbooks/manual-checks.md` (the spec's new checks), `README.md` (USERS, groups, security rule).
 
 **Interfaces produced:**
 - `SignalClient.list_groups() -> list[GroupInfo]`, where `GroupInfo(id: str, members: list[MemberRef])` and `MemberRef(number: str | None, uuid: str | None)`.

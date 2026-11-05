@@ -1,4 +1,4 @@
-# Monty — Shared Use, Chats and mise (design amendment)
+# Monti — Shared Use, Chats and mise (design amendment)
 
 Date: 2026-11-05
 Status: Draft, awaiting approval
@@ -8,10 +8,10 @@ not mentioned here stays as the v1 design and the code on
 
 ## Intent
 
-Keith and his partner both want to use Monty, in direct messages and in Signal
+Keith and his partner both want to use Monti, in direct messages and in Signal
 groups. The unit of conversation becomes **the chat**, not the person: each DM
-with Monty and each group Monty is in is its own conversation with its own
-agent and memory. Keith often starts several groups with just himself and Monty,
+with Monti and each group Monti is in is its own conversation with its own
+agent and memory. Keith often starts several groups with just himself and Monti,
 using them like separate threads.
 
 Separately, the repo's task runner moves from make to **mise**, which also pins
@@ -19,8 +19,8 @@ tool versions (fixing the Node-too-old problem for Pi).
 
 ## Goals
 
-- Several named people (from config) can use Monty in DMs.
-- Monty works in Signal groups and replies to **every** message in an allowed
+- Several named people (from config) can use Monti in DMs.
+- Monti works in Signal groups and replies to **every** message in an allowed
   group, with no mention or prefix needed.
 - Each chat has its own active agent, session and `/new`/`/which`.
 - The agent always knows who sent each message.
@@ -39,10 +39,10 @@ tool versions (fixing the Node-too-old problem for Pi).
 ## Anti-goals (replace the v1 "anyone other than me" anti-goal)
 
 - **Someone not on the list gets a response.** A DM from an unknown number or UUID is dropped silently.
-- **Monty speaks in a group that includes anyone not on the list**, because its
-  replies would show household finances to that person. Monty stays silent in such
+- **Monti speaks in a group that includes anyone not on the list**, because its
+  replies would show household finances to that person. Monti stays silent in such
   a group, even when someone on the list writes there. Membership is checked
-  **fail-closed**: if the member list can't be fetched, Monty stays silent.
+  **fail-closed**: if the member list can't be fetched, Monti stays silent.
 - The other v1 anti-goals stay unchanged: no host access for agents, no Monarch
   writes, and secrets and financial data stay on local disk.
 
@@ -65,10 +65,10 @@ tool versions (fixing the Node-too-old problem for Pi).
 - **Group members** come from signal-cli (the REST API's group listing for the bot
   number), cached per group for 60s. Any lookup failure means drop and log.
 - **Joining groups:** the builder confirms how signal-cli handles group invites. If
-  a pending invite needs an explicit accept, Monty accepts only invites from someone
+  a pending invite needs an explicit accept, Monti accepts only invites from someone
   on the list. If signal-cli joins automatically, the admission rule above still
-  keeps Monty silent wherever it shouldn't speak. The runbook documents how to add
-  Monty to a group.
+  keeps Monti silent wherever it shouldn't speak. The runbook documents how to add
+  Monti to a group.
 - **Replies and typing indicators** go to the chat: the person for a DM, the group for a group.
 - **Commands** (`/agent`, `/new`, `/which`, `/help`) work in any allowed chat and
   apply to that chat. In a group, whoever sends the command changes it for everyone in that group.
@@ -101,10 +101,10 @@ tool versions (fixing the Node-too-old problem for Pi).
 
 ## System prompt
 
-`prompts/system.md` is rewritten for a household. "Monty" still appears exactly
+`prompts/system.md` is rewritten for a household. "Monti" still appears exactly
 once, on the first line. The prompt also says:
 - Several household members may write, sometimes together in a group. Each
-  message's `From:` line says who is asking, and Monty answers that person,
+  message's `From:` line says who is asking, and Monti answers that person,
   using their name when it's natural.
 - The Monarch data is the household's shared data.
 - Everything else in the v1 prompt stays: plain text, $ amounts, the time line,
@@ -123,11 +123,11 @@ once, on the first line. The prompt also says:
 ## Docs
 
 - README: `USERS`, mise setup (`mise install`), groups, and the security rule for groups.
-- Registration runbook: how to add Monty to a group.
+- Registration runbook: how to add Monti to a group.
 - manual-checks.md: add these checks:
   - a DM from Keith and one from the partner (separate conversations)
-  - two Keith-and-Monty groups (separate conversations)
-  - a group with both people (Monty answers each by name)
+  - two Keith-and-Monti groups (separate conversations)
+  - a group with both people (Monti answers each by name)
   - a group with an outsider (silence)
   - commands in a group apply to that group only
   - two chats at once (no waiting)

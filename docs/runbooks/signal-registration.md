@@ -1,8 +1,8 @@
-# Signal registration (Monty bot number)
+# Signal registration (Monti bot number)
 
 One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do this before `mise run up`.
 
-1. Fill in `.env` (copy `.env.example`): `USERS` (everyone Monty answers, as
+1. Fill in `.env` (copy `.env.example`): `USERS` (everyone Monti answers, as
    `Name=+E164[/uuid]`, comma-separated; see `README.md`) and `BOT_NUMBER`, numbers in E.164
    like `+16175550100`.
 2. Start only signal-cli with a temporary loopback publish. Create `docker-compose.override.yml`
@@ -45,7 +45,7 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
 
    ```sh
    curl -X PUT http://127.0.0.1:8080/v1/profiles/$BOT_NUMBER \
-     -H 'Content-Type: application/json' -d '{"name": "Monty"}'
+     -H 'Content-Type: application/json' -d '{"name": "Monti"}'
    ```
 6. Remove the override file, then `docker compose down && mise run up`.
 7. From your personal phone text the bot `hi`. Expect a typing indicator, then
@@ -55,23 +55,23 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
 Registration state lives in `data/signal/` (gitignored). Back it up; losing it means
 re-registering.
 
-## Adding Monty to a group
+## Adding Monti to a group
 
-Monty answers in a group only when every member other than Monty is in `USERS` (see the group
+Monti answers in a group only when every member other than Monti is in `USERS` (see the group
 security rule in `README.md`). To add it:
 
-1. DM the bot first from the phone that will add it (any message, for example `/which`). Monty's
+1. DM the bot first from the phone that will add it (any message, for example `/which`). Monti's
    reply should share its profile with you, which usually lets Signal add it to a group
    directly instead of only inviting it.
 2. In Signal, create a group (or open an existing one) and add the bot's number as a member.
-   A group of just you and Monty is fine: it's a separate conversation from your DM.
+   A group of just you and Monti is fine: it's a separate conversation from your DM.
 3. Send a message in the group. Expect a typing indicator and a reply.
 
 If Signal could only *invite* the bot (it shows as "invited"/pending), the gateway accepts the
 invite on its own, but only when all of these hold: the group change was sent by someone in
 `USERS`, the bot is listed as invited, and everyone else in the group (members and anyone else
 invited or asking to join) is in `USERS`. Otherwise the invite stays pending. signal-cli doesn't
-record who sent an invite, so this stands in for "invited by a user": Monty never joins a group
+record who sent an invite, so this stands in for "invited by a user": Monti never joins a group
 that has an outsider in it, whoever invited it. Group changes reach the bot as signal-cli
 "UPDATE" messages; the gateway then re-reads the group list and calls the join endpoint.
 
@@ -85,7 +85,7 @@ curl "http://127.0.0.1:8080/v1/groups/$BOT_NUMBER?expand=true"
 curl -X POST "http://127.0.0.1:8080/v1/groups/$BOT_NUMBER/<group.id>/join"
 ```
 
-If Monty stays silent in a group, check `mise run logs` for the gateway's reason: a member not in
+If Monti stays silent in a group, check `mise run logs` for the gateway's reason: a member not in
 `USERS`, an outsider invited, the bot not yet a full member, or a failed member lookup.
 
 Optional `BOT_UUID`: set it if signal-cli ever lists the bot in a group by uuid only (the gateway

@@ -1,4 +1,4 @@
-"""Group admission: Monty speaks in a group only when everyone else in it is a user.
+"""Group admission: Monti speaks in a group only when everyone else in it is a user.
 
 Fail-closed throughout: a failed or slow lookup, an unknown group, a member we can't
 identify, or a group the bot isn't a full member of all mean "stay silent".

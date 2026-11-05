@@ -103,7 +103,7 @@ class FakeClient:
 
 async def test_real_graph_binds_monarch_tools_but_not_execute(monkeypatch, tmp_path):
     prompt = tmp_path / "system.md"
-    prompt.write_text("You are Monty.")
+    prompt.write_text("You are Monti.")
     monkeypatch.setenv("SYSTEM_PROMPT_PATH", str(prompt))
     monkeypatch.setattr(agent_mod, "Client", FakeClient)
     model = ToolRecordingModel(messages=iter([AIMessage(content="hi")]))

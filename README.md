@@ -1,6 +1,6 @@
-# Monty
+# Monti
 
-Monty is your butterfly friend you text for money advice. It is a household Signal bot that
+Monti is your butterfly friend you text for money advice. It is a household Signal bot that
 answers questions about your Monarch Money finances. The people listed in `USERS` text the bot's
 number, directly or in a Signal group with it; a gateway forwards each message to one of three
 interchangeable agents (echo, Pi, or deepagents), and the agent reads the household's data through
@@ -40,7 +40,7 @@ acceptance script.
 
 ### Users
 
-`USERS` lists everyone Monty answers, comma-separated, as `Name=+E164[/uuid]`:
+`USERS` lists everyone Monti answers, comma-separated, as `Name=+E164[/uuid]`:
 
 ```sh
 USERS=Keith=+16175550100,Alex=+16175550101/0b8a3c1e-1d2f-4a5b-9c6d-7e8f9a0b1c2d
@@ -52,20 +52,20 @@ because they hide their number from people who don't have it). Anyone not listed
 
 ### Chats and groups
 
-Each DM with Monty and each group Monty is in is its own chat, with its own agent, session and
+Each DM with Monti and each group Monti is in is its own chat, with its own agent, session and
 memory. `/agent`, `/new` and `/which` apply to the chat you send them in; in a group, whoever
-sends a command changes it for everyone there. Monty answers every message in an allowed group
+sends a command changes it for everyone there. Monti answers every message in an allowed group
 (no mention needed). Chats run independently: a slow answer in one doesn't hold up another, and
 messages in one chat are answered in order.
 
-To use Monty in a group, add the bot's number to a Signal group like any other contact. A group
-of just you and Monty works as a separate thread. See `docs/runbooks/signal-registration.md`.
+To use Monti in a group, add the bot's number to a Signal group like any other contact. A group
+of just you and Monti works as a separate thread. See `docs/runbooks/signal-registration.md`.
 
-**Group security rule.** Monty speaks in a group only when every member other than Monty is in
+**Group security rule.** Monti speaks in a group only when every member other than Monti is in
 `USERS`, because its answers show the household's finances to everyone there. If anyone else is in
-the group, or has been invited to it, Monty stays silent, even when someone on the list writes.
+the group, or has been invited to it, Monti stays silent, even when someone on the list writes.
 Membership is checked fail-closed: if signal-cli can't list the group's members (error, timeout,
-unknown group, a member it can't identify), Monty stays silent and logs why. Membership is cached
+unknown group, a member it can't identify), Monti stays silent and logs why. Membership is cached
 for 60 seconds per group and refreshed when the group changes.
 
 ## Signal commands
@@ -75,7 +75,7 @@ for 60 seconds per group and refreshed when the group changes.
 - `/which` shows the current agent, session and model.
 - `/help` lists the commands.
 
-Anything else is a question for the current agent. If Monarch login expires, Monty says so;
+Anything else is a question for the current agent. If Monarch login expires, Monti says so;
 run `mise run monarch-login` on the Mac again.
 
 ## Development

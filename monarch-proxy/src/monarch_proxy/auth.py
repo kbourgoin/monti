@@ -38,7 +38,7 @@ class _ReadOnlyScopeMetadata(OAuthClientMetadata):
 
 def build_client_metadata() -> OAuthClientMetadata:
     return _ReadOnlyScopeMetadata(
-        client_name="Monty (read-only)",
+        client_name="Monti (read-only)",
         redirect_uris=[f"http://127.0.0.1:{REDIRECT_PORT}/callback"],
         grant_types=["authorization_code", "refresh_token"],
         response_types=["code"],

@@ -1,4 +1,4 @@
-name: monty
+name: monti
 
 services:
   signal-cli:

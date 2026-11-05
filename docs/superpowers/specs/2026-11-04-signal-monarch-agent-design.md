@@ -1,4 +1,4 @@
-# Monty — Design
+# Monti — Design
 
 Date: 2026-11-04
 Status: Draft, awaiting approval

@@ -60,28 +60,28 @@ Use `/agent echo` in each chat first, so the turn counter shows which conversati
 
 1. **Two DMs.** Keith DMs `hi` twice; Alex DMs `hi`. Keith sees turns 1 and 2, Alex sees turn 1:
    separate conversations.
-2. **Two Keith-and-Monty groups.** Make two groups with only Keith and Monty (see
-   `signal-registration.md`, "Adding Monty to a group"). Send `hi` in each. Each reply is in its own
+2. **Two Keith-and-Monti groups.** Make two groups with only Keith and Monti (see
+   `signal-registration.md`, "Adding Monti to a group"). Send `hi` in each. Each reply is in its own
    group and each says turn 1; your DM is unaffected.
-3. **Both people in one group.** Make a group with Keith, Alex and Monty. Switch it to `/agent pi`
-   and have each person ask something. Monty answers in the group and addresses each person by name.
-4. **A group with an outsider.** Make a group with Keith, the outsider and Monty, and have Keith send
+3. **Both people in one group.** Make a group with Keith, Alex and Monti. Switch it to `/agent pi`
+   and have each person ask something. Monti answers in the group and addresses each person by name.
+4. **A group with an outsider.** Make a group with Keith, the outsider and Monti, and have Keith send
    `hi`. Expect silence (no typing indicator either) and a gateway log line saying the group has a
-   member not in `USERS`. Then remove the outsider and, after up to a minute, send `hi` again: Monty
-   answers. Add the outsider back (or just invite them): Monty goes silent again.
+   member not in `USERS`. Then remove the outsider and, after up to a minute, send `hi` again: Monti
+   answers. Add the outsider back (or just invite them): Monti goes silent again.
 5. **Commands are per chat.** In one of the step 2 groups send `/agent deep`, then `/which` there
    (deep) and `/which` in the other group and in your DM (unchanged).
 6. **Two chats at once.** With `/agent pi`, ask a slow question in one group (for example the
-   multi-step one from section 3), and while Monty is typing there send `/which` in your DM. The DM
+   multi-step one from section 3), and while Monti is typing there send `/which` in your DM. The DM
    answer arrives without waiting for the group.
 7. **Order within a chat.** In one group send `one` then `two` quickly (echo). Answers come in order.
-8. **Invites.** If Signal only invited Monty in any step above, confirm:
+8. **Invites.** If Signal only invited Monti in any step above, confirm:
    - in an all-`USERS` group, Keith's invite is accepted automatically (log line
      `accepted group invite`);
    - in a group with the outsider in it, the invite stays pending even when Keith (not the
-     outsider) invites Monty or renames the group (log line `left pending`); Monty never joins
+     outsider) invites Monti or renames the group (log line `left pending`); Monti never joins
      or speaks there;
-   - after Monty is removed from a group, a later change there doesn't make it rejoin.
+   - after Monti is removed from a group, a later change there doesn't make it rejoin.
 
 ### signal-cli REST assumptions to confirm
 
@@ -107,6 +107,6 @@ man page, not against a live server. While doing section 7, confirm:
   as a `groupInfo.type: "UPDATE"` data message with no text, sent by the inviter. If no such frame
   arrives, step 8 fails: accept by hand as in the registration runbook and tell the builder.
 - **Group listing `member` field.** If the group listing has no `member` field, every group logs
-  "bot is not a full member" and Monty stays silent in all groups; report it to the builder.
+  "bot is not a full member" and Monti stays silent in all groups; report it to the builder.
 - **Profile sharing.** DMing the bot before adding it lets Signal add it directly rather than
   invite it. If adding always produces an invite, that's fine as long as step 8 passes.
