@@ -42,13 +42,15 @@ def test_malformed_request(client):
 @pytest.mark.llm
 def test_memory_within_session(post_turn):
     sid = uuid4()
-    post_turn("Remember the code word teal-42.", sid)
+    seed = post_turn("Remember the code word teal-42.", sid)
+    assert seed.status_code == 200, seed.text
     assert "teal-42" in post_turn("What was the code word?", sid).json()["reply"]
 
 
 @pytest.mark.llm
 def test_sessions_isolated(post_turn):
-    post_turn("Remember the code word teal-42.", uuid4())
+    seed = post_turn("Remember the code word teal-42.", uuid4())
+    assert seed.status_code == 200, seed.text  # else isolation would pass vacuously
     reply = post_turn("What was the code word?", uuid4()).json()["reply"]
     assert "teal-42" not in reply
 

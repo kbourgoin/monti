@@ -4,4 +4,5 @@ node_modules/
 .venv/
 __pycache__/
 *.db
+docker-compose.override.yml
 .DS_Store
