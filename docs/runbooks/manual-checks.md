@@ -44,7 +44,7 @@ otherwise. Run `make test` and `make contract` first.
 
 ## 6. Records match the session
 
-1. Turns: `sqlite3 data/gateway.db "select id, agent, inbound, status, input_tokens, output_tokens from turns"`.
+1. Turns: `sqlite3 data/gateway/gateway.db "select id, agent, inbound, status, input_tokens, output_tokens from turns"`.
    Expect one row per question you sent in sections 1 to 5 (commands, reactions and ignored senders
    write none).
 2. Monarch calls: `wc -l data/logs/monarch-calls.jsonl` and `tail -n 5 data/logs/monarch-calls.jsonl`.

@@ -17,14 +17,17 @@ services:
       args:
         PACKAGE: gateway
     restart: unless-stopped
-    env_file: .env
+    # From the host env only the Signal numbers and DEFAULT_AGENT (no env_file, so no API key).
     environment:
+      OWNER_NUMBER: ${OWNER_NUMBER}
+      OWNER_UUID: ${OWNER_UUID:-}
+      BOT_NUMBER: ${BOT_NUMBER}
+      DEFAULT_AGENT: ${DEFAULT_AGENT:-pi}
       SIGNAL_URL: http://signal-cli:8080
-      DEFAULT_AGENT: pi
       AGENTS: echo=http://agent-echo:8201,pi=http://agent-pi:8202,deep=http://agent-deep:8203
-      DB_PATH: /app/data/gateway.db
+      DB_PATH: /app/data/gateway/gateway.db
     volumes:
-      - ./data:/app/data
+      - ./data/gateway:/app/data/gateway
     depends_on:
       - signal-cli
       - agent-echo

@@ -10,7 +10,7 @@ contract:
 	./scripts/contract.sh
 
 up:
-	mkdir -p data/signal data/monarch data/logs data/agents/pi data/agents/deep
+	mkdir -p data/signal data/gateway data/monarch data/logs data/agents/pi data/agents/deep
 	docker compose up -d --build
 
 down:

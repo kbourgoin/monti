@@ -54,7 +54,7 @@ run `make monarch-login` on the Mac again.
 
 ## Where things live
 
-- `data/gateway.db`: SQLite. The `turns` table has one row per question (agent, session,
+- `data/gateway/gateway.db`: SQLite. The `turns` table has one row per question (agent, session,
   inbound, reply, status, tool calls, tokens).
 - `data/logs/monarch-calls.jsonl`: one line per Monarch tool call (tool, args, ms, ok, size;
   never the results).

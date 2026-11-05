@@ -39,5 +39,5 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         signal_url=env["SIGNAL_URL"],
         agents=agents,
         default_agent=default_agent,
-        db_path=Path(env.get("DB_PATH", "data/gateway.db")),
+        db_path=Path(env.get("DB_PATH", "data/gateway/gateway.db")),
     )
