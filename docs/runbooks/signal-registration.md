@@ -48,6 +48,7 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
      -H 'Content-Type: application/json' -d '{"name": "Monti"}'
    ```
 6. Remove the override file, then `docker compose down && mise run up`.
+7. Set the profile picture: `mise run set-avatar` (or `mise run set-avatar path/to/image.png`).
 7. From your personal phone text the bot `hi`. Expect a typing indicator, then
    `echo (Keith): hi (turn 1)` (with `/agent echo`). `/which` shows agent, session and model. Messages
    from numbers not in `USERS` get no reply.

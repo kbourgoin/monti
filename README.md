@@ -34,6 +34,8 @@ Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`, amen
    `uv run monarch-login --check`.
 3. Register the bot's Signal number: follow `docs/runbooks/signal-registration.md`.
 4. Start everything: `mise run up`. Use `mise run logs` to follow logs and `mise run down` to stop.
+   Set or change Monti's Signal picture with `mise run set-avatar [image]`
+   (default `assets/monti-avatar.png`).
 
 Then text the bot `hi` from your own phone. `docs/runbooks/manual-checks.md` is the full
 acceptance script.

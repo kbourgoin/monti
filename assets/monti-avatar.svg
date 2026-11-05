@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0" stop-color="#1B3358"/>
+      <stop offset="1" stop-color="#0B1A33"/>
+    </radialGradient>
+    <linearGradient id="upper" x1="1" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#FF5A1F"/>
+      <stop offset="1" stop-color="#FF9A4A"/>
+    </linearGradient>
+    <linearGradient id="lower" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF7A2F"/>
+      <stop offset="1" stop-color="#FFB870"/>
+    </linearGradient>
+    <g id="wings">
+      <!-- upper wing -->
+      <path d="M248 238 C214 150 128 92 82 128 C44 158 62 236 128 262 C170 278 220 272 248 262 Z"
+            fill="url(#upper)"/>
+      <!-- lower wing -->
+      <path d="M248 272 C196 274 136 300 128 352 C120 404 176 424 212 392 C236 370 248 330 250 290 Z"
+            fill="url(#lower)"/>
+      <!-- veins -->
+      <g fill="none" stroke="#0B1A33" stroke-width="7" stroke-linecap="round" opacity="0.85">
+        <path d="M246 246 C200 214 150 170 104 140"/>
+        <path d="M246 252 C196 248 144 236 92 214"/>
+        <path d="M248 278 C214 300 180 330 160 378"/>
+        <path d="M248 284 C232 318 218 352 206 394"/>
+      </g>
+      <!-- edge spots -->
+      <g fill="#FFF3E6">
+        <circle cx="96" cy="150" r="7"/>
+        <circle cx="80" cy="186" r="6"/>
+        <circle cx="94" cy="224" r="6"/>
+        <circle cx="122" cy="118" r="6"/>
+        <circle cx="146" cy="390" r="6"/>
+        <circle cx="134" cy="356" r="5"/>
+        <circle cx="178" cy="408" r="5"/>
+      </g>
+    </g>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <use href="#wings"/>
+  <use href="#wings" transform="translate(512 0) scale(-1 1)"/>
+  <!-- body -->
+  <rect x="244" y="214" width="24" height="168" rx="12" fill="#FFF3E6"/>
+  <circle cx="256" cy="202" r="17" fill="#FFF3E6"/>
+  <!-- antennae -->
+  <g fill="none" stroke="#FFF3E6" stroke-width="6" stroke-linecap="round">
+    <path d="M250 190 C240 160 222 138 200 126"/>
+    <path d="M262 190 C272 160 290 138 312 126"/>
+  </g>
+  <circle cx="198" cy="125" r="9" fill="#FF9A4A"/>
+  <circle cx="314" cy="125" r="9" fill="#FF9A4A"/>
+</svg>

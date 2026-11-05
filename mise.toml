@@ -29,3 +29,7 @@ run = "docker compose down"
 [tasks.logs]
 description = "Follow logs"
 run = "docker compose logs -f --tail=100"
+
+[tasks.set-avatar]
+description = "Set Monti's Signal profile picture (default assets/monti-avatar.png; needs `mise run up`)"
+run = "scripts/set-avatar.sh"
