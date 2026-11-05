@@ -6,9 +6,13 @@ dependencies = [
   "fastapi",
   "uvicorn",
   "turn-contract",
-  "deepagents",
-  "langchain-anthropic",
-  "langgraph-checkpoint-sqlite",
+  # Pre-1.0 and fast-moving: pin the minor so a bump (e.g. new built-in tools) is deliberate.
+  "deepagents>=0.7.32,<0.8",
+  "langchain>=1.4,<2",
+  "langchain-core>=1.7,<2",
+  "langchain-anthropic>=1.7,<2",
+  "langgraph-checkpoint-sqlite>=3.1,<4",
+  "mcp>=2,<3",
 ]
 
 [project.scripts]

@@ -23,18 +23,24 @@ source = { editable = "agents/deep" }
 dependencies = [
     { name = "deepagents" },
     { name = "fastapi" },
+    { name = "langchain" },
     { name = "langchain-anthropic" },
+    { name = "langchain-core" },
     { name = "langgraph-checkpoint-sqlite" },
+    { name = "mcp" },
     { name = "turn-contract" },
     { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "deepagents" },
+    { name = "deepagents", specifier = ">=0.7.32,<0.8" },
     { name = "fastapi" },
-    { name = "langchain-anthropic" },
-    { name = "langgraph-checkpoint-sqlite" },
+    { name = "langchain", specifier = ">=1.4,<2" },
+    { name = "langchain-anthropic", specifier = ">=1.7,<2" },
+    { name = "langchain-core", specifier = ">=1.7,<2" },
+    { name = "langgraph-checkpoint-sqlite", specifier = ">=3.1,<4" },
+    { name = "mcp", specifier = ">=2,<3" },
     { name = "turn-contract", editable = "contract" },
     { name = "uvicorn" },
 ]
@@ -1021,6 +1027,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "packaging" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "respx" },
@@ -1038,6 +1045,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "packaging" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "respx" },

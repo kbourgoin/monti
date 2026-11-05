@@ -8,7 +8,7 @@ dependencies = ["monarch-proxy", "turn-contract", "agent-echo", "agent-deep", "g
 members = ["contract", "monarch-proxy", "agents/echo", "agents/deep", "gateway"]
 
 [dependency-groups]
-dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
+dev = ["packaging", "pytest", "pytest-asyncio", "respx", "ruff"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
