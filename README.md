@@ -80,6 +80,12 @@ for 60 seconds per group and refreshed when the group changes.
 Anything else is a question for the current agent. If Monarch login expires, Monti says so;
 run `mise run monarch-login` on the Mac again.
 
+After editing `prompts/system.md`, run `docker compose restart agent-pi agent-deep` (the
+agents read the prompt at startup), then send `/new` in each chat that uses Pi. Pi saves the
+prompt in each session and sends a changed one as a mid-conversation "system update", which the
+model may treat as an injection and ignore (it did, for the Monty to Monti rename). deepagents
+doesn't keep the prompt in its checkpoints, so its existing sessions use the new one.
+
 ## Development
 
 - `mise run test` runs the unit tests for every Python package.
