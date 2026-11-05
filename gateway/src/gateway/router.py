@@ -1,15 +1,20 @@
+import logging
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Protocol
 from zoneinfo import ZoneInfo
 
 from turn_contract import TurnRequest
 
 from .agent_client import AgentDown, AgentError, AgentPort, AgentTimeout
 from .commands import Command, parse_command
-from .config import Settings
+from .config import Settings, User
 from .formatting import split_reply
 from .store import Store, TurnRecord
+
+log = logging.getLogger(__name__)
 
 TIMEOUT_COPY = "That took too long. Try again or /new."
 AUTH_COPY = "Monarch login expired. Run `mise run monarch-login` on the Mac."
@@ -28,46 +33,97 @@ class Inbound:
     sender_uuid: str | None
     text: str
     timestamp_ms: int
-    is_group: bool
+    group_id: str | None = None
+
+    @property
+    def is_group(self) -> bool:
+        return self.group_id is not None
 
 
-def is_owner(inb: Inbound, s: Settings) -> bool:
-    if inb.sender_number is not None and inb.sender_number == s.owner_number:
-        return True
-    return s.owner_uuid is not None and inb.sender_uuid == s.owner_uuid
+@dataclass(frozen=True)
+class DirectRecipient:
+    number: str
+
+
+@dataclass(frozen=True)
+class GroupRecipient:
+    group_id: str
+
+
+Recipient = DirectRecipient | GroupRecipient
+
+
+@dataclass
+class Reply:
+    chat_id: str
+    recipient: Recipient
+    messages: list[str]
+
+
+class GroupGate(Protocol):
+    async def allowed(self, group_id: str) -> bool: ...
+
+
+def match_user(inb: Inbound, s: Settings) -> User | None:
+    for u in s.users:
+        if inb.sender_number is not None and inb.sender_number == u.number:
+            return u
+        if u.uuid is not None and inb.sender_uuid == u.uuid:
+            return u
+    return None
+
+
+def chat_id(inb: Inbound, user: User) -> str:
+    return f"group:{inb.group_id}" if inb.group_id is not None else f"dm:{user.number}"
 
 
 class Router:
-    def __init__(self, settings: Settings, store: Store, agents: AgentPort):
+    def __init__(self, settings: Settings, store: Store, agents: AgentPort, gate: GroupGate):
         self.s = settings
         self.store = store
         self.agents = agents
+        self.gate = gate
 
-    @property
-    def _owner(self) -> str:
-        return self.s.owner_number
-
-    def _active(self) -> str:
-        agent = self.store.active_agent(self._owner)
+    def _active(self, chat: str) -> str:
+        agent = self.store.active_agent(chat)
         return agent if agent in self.s.agents else self.s.default_agent
 
-    async def handle(self, inb: Inbound) -> list[str]:
-        if inb.is_group or not is_owner(inb, self.s):
-            return []
+    async def handle(
+        self,
+        inb: Inbound,
+        on_admitted: Callable[[Recipient], Awaitable[None]] | None = None,
+    ) -> Reply | None:
+        """Admit, then answer. `on_admitted` runs once the sender (and group) pass, before the turn."""
+        user = match_user(inb, self.s)
+        if user is None:
+            return None
+        recipient: Recipient
+        if inb.group_id is not None:
+            try:
+                if not await self.gate.allowed(inb.group_id):
+                    return None
+            except Exception:
+                log.exception("group gate failed; dropping (fail-closed)")
+                return None
+            recipient = GroupRecipient(inb.group_id)
+        else:
+            recipient = DirectRecipient(user.number)
+        if on_admitted is not None:
+            await on_admitted(recipient)
+        chat = chat_id(inb, user)
         cmd = parse_command(inb.text)
-        if cmd:
-            return [await self._command(cmd)]
-        return await self._turn(inb.text)
+        messages = [await self._command(chat, cmd)] if cmd else await self._turn(chat, user, inb.text)
+        return Reply(chat, recipient, messages)
 
-    async def _command(self, cmd: Command) -> str:
-        agent = self._active()
+    async def _command(self, chat: str, cmd: Command) -> str:
+        agent = self._active(chat)
         if cmd.name == "help":
             return HELP
         if cmd.name == "new":
-            self.store.rotate_session(self._owner, agent)
+            self.store.rotate_session(chat, agent)
             return f"Started a new session with {agent}."
         if cmd.name == "which":
-            sid = self.store.current_session(self._owner, agent)
+            sid = self.store.current_session(chat, agent)
             try:
                 model = (await self.agents.health(agent)).model
                 detail = f"model {model}"
@@ -78,18 +134,18 @@ class Router:
         choices = ", ".join(sorted(self.s.agents))
         if cmd.arg is None or cmd.arg not in self.s.agents:
             return f"{cmd.arg or '(none)'} is not a valid agent. Choose one of: {choices}."
-        self.store.set_active_agent(self._owner, cmd.arg)
+        self.store.set_active_agent(chat, cmd.arg)
         return f"Switched to {cmd.arg}."
 
-    async def _turn(self, text: str) -> list[str]:
-        agent = self._active()
-        sid = self.store.current_session(self._owner, agent)
+    async def _turn(self, chat: str, user: User, text: str) -> list[str]:
+        agent = self._active(chat)
+        sid = self.store.current_session(chat, agent)
         tz = ZoneInfo(self.s.tz)
         req = TurnRequest(
             session_id=sid,
             message_id=str(uuid.uuid4()),
             text=text,
-            sender_name=self._owner,  # Task 3 replaces with the real name
+            sender_name=user.name,
             now=datetime.now(tz).replace(microsecond=0),
         )
         started = datetime.now(tz).isoformat()
@@ -118,7 +174,7 @@ class Router:
             out = split_reply(resp.reply, self.s.split_limit)
         self.store.log_turn(
             TurnRecord(
-                session_id=sid, agent=agent, inbound=text, reply=reply, started_at=started,
+                chat_id=chat, sender_name=user.name, session_id=sid, agent=agent, inbound=text, reply=reply, started_at=started,
                 finished_at=datetime.now(tz).isoformat(), status=status,
                 tool_calls=tool_calls, input_tokens=in_tok, output_tokens=out_tok,
             )

@@ -17,10 +17,9 @@ services:
       args:
         PACKAGE: gateway
     restart: unless-stopped
-    # From the host env only the Signal numbers and DEFAULT_AGENT (no env_file, so no API key).
+    # From the host env only USERS, the bot number and DEFAULT_AGENT (no env_file, so no API key).
     environment:
-      OWNER_NUMBER: ${OWNER_NUMBER}
-      OWNER_UUID: ${OWNER_UUID:-}
+      USERS: ${USERS}
       BOT_NUMBER: ${BOT_NUMBER}
       DEFAULT_AGENT: ${DEFAULT_AGENT:-pi}
       SIGNAL_URL: http://signal-cli:8080

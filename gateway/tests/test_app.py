@@ -5,10 +5,11 @@ from pathlib import Path
 
 import pytest
 from gateway.app import Gateway
-from gateway.config import Settings
-from gateway.router import Inbound
+from gateway.config import Settings, User
+from gateway.router import DirectRecipient, Inbound, Reply
 
 OWNER = "+15551112222"
+DM = DirectRecipient(OWNER)
 FIX = Path(__file__).parent / "fixtures"
 
 
@@ -36,22 +37,25 @@ class FakeRouter:
     def __init__(self, delay=0.0, exc=None):
         self.delay, self.exc, self.events = delay, exc, []
 
-    async def handle(self, inb: Inbound):
+    async def handle(self, inb: Inbound, on_admitted=None):
         self.events.append(("start", inb.text))
+        rec = DirectRecipient(OWNER)
+        admitted = inb.sender_number == OWNER and inb.group_id is None
+        if admitted and on_admitted:
+            await on_admitted(rec)
         await asyncio.sleep(self.delay)
         self.events.append(("end", inb.text))
         if self.exc:
             raise self.exc
-        if inb.sender_number != OWNER:
-            return []
-        return [f"r:{inb.text}"]
+        if not admitted:
+            return None
+        return Reply(f"dm:{OWNER}", rec, [f"r:{inb.text}"])
 
 
 @pytest.fixture
 def settings(tmp_path):
     return Settings(
-        owner_number=OWNER,
-        owner_uuid=None,
+        users=(User("Keith", OWNER),),
         bot_number="+15553334444",
         signal_url="http://signal",
         agents={"echo": "http://e"},
@@ -71,13 +75,13 @@ async def test_messages_processed_serially(settings):
 async def test_typing_on_then_off(settings):
     sig = FakeSignal()
     await Gateway(settings, sig, FakeRouter()).on_message(raw())
-    assert sig.calls == [("typing", OWNER, True), ("send", OWNER, "r:hi"), ("typing", OWNER, False)]
+    assert sig.calls == [("typing", DM, True), ("send", DM, "r:hi"), ("typing", DM, False)]
 
 
 async def test_typing_off_even_on_error(settings):
     sig = FakeSignal()
     await Gateway(settings, sig, FakeRouter(exc=RuntimeError("boom"))).on_message(raw())
-    assert sig.calls == [("typing", OWNER, True), ("typing", OWNER, False)]
+    assert sig.calls == [("typing", DM, True), ("typing", DM, False)]
 
 
 async def test_unexpected_error_logged_and_swallowed(settings, caplog):
@@ -89,7 +93,7 @@ async def test_unexpected_error_logged_and_swallowed(settings, caplog):
     assert not [c for c in sig.calls if c[0] == "send"]
 
 
-async def test_non_owner_no_typing(settings):
+async def test_stranger_no_typing(settings):
     sig = FakeSignal()
     await Gateway(settings, sig, FakeRouter()).on_message(raw(number="+19998887777"))
     assert sig.calls == []

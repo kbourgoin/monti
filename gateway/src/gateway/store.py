@@ -6,12 +6,13 @@ from pathlib import Path
 from typing import Literal
 
 _SCHEMA = """
-create table if not exists active_agent (owner text primary key, agent text not null);
+create table if not exists active_agent (chat_id text primary key, agent text not null);
 create table if not exists sessions (
-    owner text not null, agent text not null, session_id text not null,
-    primary key (owner, agent));
+    chat_id text not null, agent text not null, session_id text not null,
+    primary key (chat_id, agent));
 create table if not exists turns (
     id integer primary key autoincrement,
+    chat_id text not null default '', sender_name text not null default '',
     session_id text not null, agent text not null, inbound text not null, reply text,
     started_at text not null, finished_at text not null, status text not null,
     tool_calls text not null, input_tokens integer not null, output_tokens integer not null);
@@ -20,6 +21,8 @@ create table if not exists turns (
 
 @dataclass
 class TurnRecord:
+    chat_id: str
+    sender_name: str
     session_id: str
     agent: str
     inbound: str
@@ -37,43 +40,58 @@ class Store:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         self._db = sqlite3.connect(path)
+        self._migrate_owner_schema()
         self._db.executescript(_SCHEMA)
         self._db.commit()
 
-    def active_agent(self, owner: str) -> str | None:
-        row = self._db.execute("select agent from active_agent where owner=?", (owner,)).fetchone()
+    def _migrate_owner_schema(self) -> None:
+        """v1 databases keyed state by `owner`; carry it over as `dm:<number>` chat ids."""
+        for table in ("active_agent", "sessions"):
+            cols = [r[1] for r in self._db.execute(f"pragma table_info({table})")]
+            if "owner" in cols:
+                self._db.execute(f"alter table {table} rename column owner to chat_id")
+                self._db.execute(f"update {table} set chat_id='dm:'||chat_id")
+        cols = [r[1] for r in self._db.execute("pragma table_info(turns)")]
+        if cols:
+            for col in ("chat_id", "sender_name"):
+                if col not in cols:
+                    self._db.execute(f"alter table turns add column {col} text not null default ''")
+        self._db.commit()
+
+    def active_agent(self, chat_id: str) -> str | None:
+        row = self._db.execute("select agent from active_agent where chat_id=?", (chat_id,)).fetchone()
         return row[0] if row else None
 
-    def set_active_agent(self, owner: str, agent: str) -> None:
+    def set_active_agent(self, chat_id: str, agent: str) -> None:
         self._db.execute(
-            "insert into active_agent(owner, agent) values(?,?) "
-            "on conflict(owner) do update set agent=excluded.agent",
-            (owner, agent),
+            "insert into active_agent(chat_id, agent) values(?,?) "
+            "on conflict(chat_id) do update set agent=excluded.agent",
+            (chat_id, agent),
         )
         self._db.commit()
 
-    def current_session(self, owner: str, agent: str) -> str:
+    def current_session(self, chat_id: str, agent: str) -> str:
         row = self._db.execute(
-            "select session_id from sessions where owner=? and agent=?", (owner, agent)
+            "select session_id from sessions where chat_id=? and agent=?", (chat_id, agent)
         ).fetchone()
-        return row[0] if row else self.rotate_session(owner, agent)
+        return row[0] if row else self.rotate_session(chat_id, agent)
 
-    def rotate_session(self, owner: str, agent: str) -> str:
+    def rotate_session(self, chat_id: str, agent: str) -> str:
         sid = str(uuid.uuid4())
         self._db.execute(
-            "insert into sessions(owner, agent, session_id) values(?,?,?) "
-            "on conflict(owner, agent) do update set session_id=excluded.session_id",
-            (owner, agent, sid),
+            "insert into sessions(chat_id, agent, session_id) values(?,?,?) "
+            "on conflict(chat_id, agent) do update set session_id=excluded.session_id",
+            (chat_id, agent, sid),
         )
         self._db.commit()
         return sid
 
     def log_turn(self, rec: TurnRecord) -> None:
         self._db.execute(
-            "insert into turns(session_id, agent, inbound, reply, started_at, finished_at, "
-            "status, tool_calls, input_tokens, output_tokens) values(?,?,?,?,?,?,?,?,?,?)",
+            "insert into turns(chat_id, sender_name, session_id, agent, inbound, reply, started_at, finished_at, "
+            "status, tool_calls, input_tokens, output_tokens) values(?,?,?,?,?,?,?,?,?,?,?,?)",
             (
-                rec.session_id, rec.agent, rec.inbound, rec.reply, rec.started_at,
+                rec.chat_id, rec.sender_name, rec.session_id, rec.agent, rec.inbound, rec.reply, rec.started_at,
                 rec.finished_at, rec.status, json.dumps(rec.tool_calls),
                 rec.input_tokens, rec.output_tokens,
             ),

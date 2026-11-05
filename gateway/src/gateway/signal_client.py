@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 import httpx
 import websockets
 
-from .router import Inbound
+from .router import DirectRecipient, Inbound, Recipient
 
 log = logging.getLogger(__name__)
 
@@ -22,12 +22,18 @@ def parse_envelope(msg: dict) -> Inbound | None:
     text = data.get("message")
     if not isinstance(text, str) or not text:
         return None
+    group = data.get("groupInfo") or data.get("groupV2")
+    group_id: str | None = None
+    if group:
+        # A group frame with no usable id is still a group (never a DM); the gate denies "".
+        gid = group.get("groupId") or group.get("id") if isinstance(group, dict) else None
+        group_id = gid if isinstance(gid, str) else ""
     return Inbound(
         sender_number=envelope.get("sourceNumber") or envelope.get("source"),
         sender_uuid=envelope.get("sourceUuid"),
         text=text,
         timestamp_ms=data.get("timestamp") or envelope.get("timestamp") or 0,
-        is_group=bool(data.get("groupInfo") or data.get("groupV2")),
+        group_id=group_id,
     )
 
 
@@ -57,19 +63,23 @@ class SignalClient:
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, 30.0)
 
-    async def send(self, recipient: str, text: str) -> None:
+    async def send(self, recipient: Recipient, text: str) -> None:
+        if not isinstance(recipient, DirectRecipient):
+            raise NotImplementedError("group send arrives in Task 4")
         r = await self._http.post(
             f"{self.base_url}/v2/send",
-            json={"message": text, "number": self.bot_number, "recipients": [recipient]},
+            json={"message": text, "number": self.bot_number, "recipients": [recipient.number]},
         )
         r.raise_for_status()
 
-    async def typing(self, recipient: str, on: bool) -> None:
+    async def typing(self, recipient: Recipient, on: bool) -> None:
+        if not isinstance(recipient, DirectRecipient):
+            raise NotImplementedError("group typing arrives in Task 4")
         try:
             r = await self._http.request(
                 "PUT" if on else "DELETE",
                 f"{self.base_url}/v1/typing-indicator/{self.bot_number}",
-                json={"recipient": recipient},
+                json={"recipient": recipient.number},
             )
             r.raise_for_status()
         except httpx.HTTPError as e:
