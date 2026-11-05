@@ -63,6 +63,10 @@ class Gateway:
             return
         user = match_user(inb, self.s)
         if user is None:
+            log.info(  # never the text
+                "dropping message from unknown sender (number=%s uuid=%s)",
+                inb.sender_number, inb.sender_uuid,
+            )
             return  # the router would drop it too; strangers never get a worker
         self._enqueue(chat_id(inb, user), lambda: self.handle(inb))
 

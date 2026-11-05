@@ -16,8 +16,20 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
    ```
 
    Then: `mkdir -p data/signal && docker compose up -d signal-cli`.
+
+   The commands below use `$BOT_NUMBER` from your shell, which `.env` doesn't set. Set it first,
+   or every request returns `404 page not found`:
+
+   ```sh
+   export BOT_NUMBER=+16175550100   # the Tello number
+   curl http://127.0.0.1:8080/v1/about   # should return JSON, not a 404
+   ```
 3. Get a captcha token at <https://signalcaptchas.org/registration/generate.html>. Solve it,
-   copy the `signalcaptcha://...` link target. It expires fast, so use it immediately:
+   copy the `signalcaptcha://...` link target. It expires fast, so use it immediately.
+   The page tries to open Signal instead of showing the token: right-click the "Open Signal"
+   link and choose Copy Link Address. If it redirects before you can, open the browser's
+   DevTools console (Cmd+Opt+J in Chrome) *before* solving. Chrome logs
+   `Launched external handler for 'signalcaptcha://…'`; copy the token from that line.
 
    ```sh
    curl -X POST http://127.0.0.1:8080/v1/register/$BOT_NUMBER \

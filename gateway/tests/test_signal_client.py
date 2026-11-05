@@ -212,3 +212,19 @@ def test_empty_group_info_is_a_group_not_a_dm():
     msg = {"envelope": {"sourceNumber": "+16175550100", "dataMessage": {"message": "hi", "groupInfo": {}}}}
     inb = parse_envelope(msg)
     assert inb is not None and inb.group_id == "" and inb.is_group is True
+
+
+# A sender who hides their number: signal-cli sends sourceNumber null and puts the uuid in source.
+HIDDEN = "37b3cefe-a96c-41e3-ac9b-ee4b2d8c9c08"
+
+
+def test_hidden_number_sender_has_no_number():
+    frame = {"envelope": {"source": HIDDEN, "sourceNumber": None, "sourceUuid": HIDDEN,
+                          "dataMessage": {"timestamp": 1, "message": "Test"}}}
+    assert parse_envelope(frame) == Inbound(None, HIDDEN, "Test", 1, None)
+
+
+def test_hidden_number_group_update_has_no_number():
+    frame = {"envelope": {"source": HIDDEN, "sourceNumber": None, "sourceUuid": HIDDEN,
+                          "dataMessage": {"groupInfo": {"groupId": "g1", "type": "UPDATE"}}}}
+    assert parse_group_update(frame) == GroupUpdate(None, HIDDEN, "g1")

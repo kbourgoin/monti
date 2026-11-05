@@ -71,6 +71,16 @@ def _group_info(entry) -> GroupInfo | None:
     return GroupInfo(gid, _members(entry.get("members")), entry.get("member") is True, pending)
 
 
+def _sender_number(envelope: dict) -> str | None:
+    """The sender's E.164 number, or None. With the number hidden, signal-cli puts the uuid in
+    `source`, so only a value that looks like a phone number counts."""
+    for key in ("sourceNumber", "source"):
+        v = envelope.get(key)
+        if isinstance(v, str) and v.startswith("+"):
+            return v
+    return None
+
+
 def parse_envelope(msg: dict) -> Inbound | None:
     """Parse a signal-cli-rest-api receive payload; only plain text data messages count."""
     envelope = msg.get("envelope")
@@ -91,7 +101,7 @@ def parse_envelope(msg: dict) -> Inbound | None:
         gid = group.get("groupId") or group.get("id") if isinstance(group, dict) else None
         group_id = gid if isinstance(gid, str) else ""
     return Inbound(
-        sender_number=envelope.get("sourceNumber") or envelope.get("source"),
+        sender_number=_sender_number(envelope),
         sender_uuid=envelope.get("sourceUuid"),
         text=text,
         timestamp_ms=data.get("timestamp") or envelope.get("timestamp") or 0,
@@ -110,7 +120,7 @@ def parse_group_update(msg) -> GroupUpdate | None:
     if gid is None:
         return None
     return GroupUpdate(
-        _str_or_none(envelope.get("sourceNumber") or envelope.get("source")),
+        _sender_number(envelope),
         _str_or_none(envelope.get("sourceUuid")),
         gid,
     )
@@ -132,6 +142,7 @@ class SignalClient:
             try:
                 async with websockets.connect(ws_url) as ws:
                     backoff = 1.0
+                    log.info("connected to signal-cli receive stream")
                     async for frame in ws:
                         try:
                             yield json.loads(frame)
@@ -145,7 +156,7 @@ class SignalClient:
     @staticmethod
     def _address(recipient: Recipient) -> str:
         if isinstance(recipient, DirectRecipient):
-            return recipient.number
+            return recipient.address
         if isinstance(recipient, GroupRecipient) and recipient.group_id:
             return rest_group_id(recipient.group_id)
         raise ValueError(f"cannot address {recipient!r}")
@@ -155,6 +166,8 @@ class SignalClient:
             f"{self.base_url}/v2/send",
             json={"message": text, "number": self.bot_number, "recipients": [self._address(recipient)]},
         )
+        if r.is_error:
+            log.warning("signal send failed: %s %s", r.status_code, r.text[:300])
         r.raise_for_status()
 
     async def list_groups(self) -> list[GroupInfo]:
@@ -181,4 +194,5 @@ class SignalClient:
             )
             r.raise_for_status()
         except httpx.HTTPError as e:
-            log.warning("typing indicator failed: %s", e)
+            body = e.response.text[:300] if isinstance(e, httpx.HTTPStatusError) else ""
+            log.warning("typing indicator failed: %s %s", e, body)

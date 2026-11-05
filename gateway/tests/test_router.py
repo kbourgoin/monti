@@ -121,6 +121,14 @@ async def test_reply_addressing(r):
     assert rep.chat_id == "group:G1" and rep.recipient == GroupRecipient("G1")
 
 
+async def test_dm_reply_goes_to_sender_uuid(r):
+    # signal-cli can't send to a number the person keeps undiscoverable; their uuid always works.
+    rep = await r.handle(inb(uuid="uuid-owner"))
+    assert rep.chat_id == f"dm:{OWNER}" and rep.recipient == DirectRecipient("uuid-owner")
+    rep = await r.handle(inb(number=None, uuid="uuid-owner"))
+    assert rep.chat_id == f"dm:{OWNER}" and rep.recipient == DirectRecipient("uuid-owner")
+
+
 def test_chat_id(settings):
     k = settings.users[0]
     assert chat_id(inb(), k) == f"dm:{OWNER}" and chat_id(inb(group="G1"), k) == "group:G1"

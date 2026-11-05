@@ -42,7 +42,7 @@ class Inbound:
 
 @dataclass(frozen=True)
 class DirectRecipient:
-    number: str
+    address: str  # the person's uuid, or E.164 number when there's no uuid
 
 
 @dataclass(frozen=True)
@@ -109,7 +109,8 @@ class Router:
                 return None
             recipient = GroupRecipient(inb.group_id)
         else:
-            recipient = DirectRecipient(user.number)
+            # By uuid when known: signal-cli can't send to a number its owner keeps undiscoverable.
+            recipient = DirectRecipient(inb.sender_uuid or user.number)
         if on_admitted is not None:
             await on_admitted(recipient)
         chat = chat_id(inb, user)
