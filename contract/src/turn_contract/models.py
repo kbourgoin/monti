@@ -10,6 +10,7 @@ class TurnRequest(BaseModel):
     session_id: str
     message_id: str
     text: str
+    sender_name: str
     now: datetime
 
 

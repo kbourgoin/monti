@@ -20,7 +20,9 @@ def health() -> Health:
 @app.post("/turn")
 def turn(req: TurnRequest) -> TurnResponse:
     _turns[req.session_id] += 1
-    return TurnResponse(reply=f"echo: {req.text} (turn {_turns[req.session_id]})")
+    return TurnResponse(
+        reply=f"echo ({req.sender_name}): {req.text} (turn {_turns[req.session_id]})"
+    )
 
 
 def main() -> None:

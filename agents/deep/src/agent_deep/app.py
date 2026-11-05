@@ -98,7 +98,7 @@ async def turn(req: TurnRequest):
             timer.start()
             result = await asyncio.wait_for(
                 graph.ainvoke(
-                    {"messages": [HumanMessage(format_user_message(req.text, req.now))]},
+                    {"messages": [HumanMessage(format_user_message(req.text, req.now, req.sender_name))]},
                     config=config,
                 ),
                 TURN_TIMEOUT_S,

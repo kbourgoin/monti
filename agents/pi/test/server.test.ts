@@ -23,6 +23,7 @@ const body = (): TurnRequest => ({
   session_id: randomUUID(),
   message_id: randomUUID(),
   text: "hello",
+  sender_name: "Zed",
   now: "2026-11-04T22:00:00-05:00",
 });
 const post = (url: string, payload: unknown) =>

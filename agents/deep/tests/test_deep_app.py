@@ -42,6 +42,7 @@ def _body(text="hi"):
         "session_id": "s1",
         "message_id": "m1",
         "text": text,
+        "sender_name": "Zed",
         "now": datetime.now(UTC).isoformat(),
     }
 

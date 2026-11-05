@@ -143,7 +143,7 @@ export class SessionStore {
       };
       signal?.addEventListener("abort", abort, { once: true });
       try {
-        await session.prompt(formatUserMessage(req.text, req.now), { expandPromptTemplates: false });
+        await session.prompt(formatUserMessage(req.text, req.now, req.sender_name), { expandPromptTemplates: false });
       } finally {
         signal?.removeEventListener("abort", abort);
         unsubscribe();

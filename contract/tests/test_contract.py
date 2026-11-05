@@ -9,11 +9,12 @@ from turn_contract import ErrorResponse, Health, TurnResponse
 
 @pytest.fixture
 def post_turn(client):
-    def _post(text: str, session_id=None):
+    def _post(text: str, session_id=None, sender_name="Tester"):
         body = {
             "session_id": str(session_id or uuid4()),
             "message_id": str(uuid4()),
             "text": text,
+            "sender_name": sender_name,
             "now": datetime.now(UTC).isoformat(),
         }
         return client.post("/turn", json=body)
@@ -33,10 +34,24 @@ def test_basic_turn(post_turn):
     assert TurnResponse.model_validate(r.json()).reply.strip()
 
 
+def test_agent_sees_sender(post_turn):
+    r = post_turn("What is my name? Reply with just the name.", sender_name="Zed")
+    assert r.status_code == 200, r.text
+    assert "Zed" in r.json()["reply"]
+
+
 def test_malformed_request(client):
-    r = client.post("/turn", json={})
-    assert r.status_code == 400
-    ErrorResponse.model_validate(r.json())
+    body = {
+        "session_id": "s",
+        "message_id": "m",
+        "text": "hi",
+        "sender_name": "Zed",
+        "now": datetime.now(UTC).isoformat(),
+    }
+    for bad in ({}, {k: v for k, v in body.items() if k != "sender_name"}):
+        r = client.post("/turn", json=bad)
+        assert r.status_code == 400
+        ErrorResponse.model_validate(r.json())
 
 
 @pytest.mark.llm

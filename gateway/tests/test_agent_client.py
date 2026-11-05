@@ -5,7 +5,7 @@ from gateway.agent_client import AgentDown, AgentError, AgentTimeout, HttpAgentC
 from turn_contract import TurnRequest
 
 URL = "http://agent:8201"
-REQ = TurnRequest(session_id="s", message_id="m", text="hi", now="2026-11-04T10:00:00-05:00")
+REQ = TurnRequest(session_id="s", message_id="m", text="hi", sender_name="Zed", now="2026-11-04T10:00:00-05:00")
 
 
 @pytest.fixture

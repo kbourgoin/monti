@@ -6,6 +6,7 @@ export interface TurnRequest {
   session_id: string;
   message_id: string;
   text: string;
+  sender_name: string;
   /** ISO-8601 with timezone, kept exactly as the gateway sent it. */
   now: string;
 }
@@ -75,8 +76,8 @@ function pythonIsoformat(now: string): string {
 }
 
 /** Prefix the user text with the current time; system prompts stay static. Same output as the Python version. */
-export function formatUserMessage(text: string, now: string): string {
-  return `Current time: ${pythonIsoformat(now)}\n\n${text}`;
+export function formatUserMessage(text: string, now: string, senderName: string): string {
+  return `Current time: ${pythonIsoformat(now)}\nFrom: ${senderName}\n\n${text}`;
 }
 
 // session_id names a directory under PI_DATA_DIR, so it must not be able to escape it.
@@ -88,7 +89,7 @@ export function parseTurnRequest(body: unknown): TurnRequest {
     throw new BadRequestError("bad request: body must be a JSON object");
   }
   const fields = body as Record<string, unknown>;
-  for (const key of ["session_id", "message_id", "text", "now"]) {
+  for (const key of ["session_id", "message_id", "text", "sender_name", "now"]) {
     if (typeof fields[key] !== "string") throw new BadRequestError(`bad request: ${key} must be a string`);
   }
   const req = fields as unknown as TurnRequest;
@@ -96,5 +97,5 @@ export function parseTurnRequest(body: unknown): TurnRequest {
     throw new BadRequestError("bad request: session_id must be 1-128 letters, digits, '-' or '_'");
   }
   pythonIsoformat(req.now);
-  return { session_id: req.session_id, message_id: req.message_id, text: req.text, now: req.now };
+  return { session_id: req.session_id, message_id: req.message_id, text: req.text, sender_name: req.sender_name, now: req.now };
 }

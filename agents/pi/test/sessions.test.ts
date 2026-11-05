@@ -14,6 +14,7 @@ const turn = (session_id: string, text: string): TurnRequest => ({
   session_id,
   message_id: randomUUID(),
   text,
+  sender_name: "Zed",
   now: NOW,
 });
 const callAccounts = () =>
@@ -72,7 +73,7 @@ describe("runTurn", () => {
     expect(res.tool_calls).toMatchObject([{ name: "GetAccounts", args: { intent: "account overview" }, ok: true }]);
     expect(res.usage.input_tokens).toBeGreaterThan(0);
     expect(res.usage.output_tokens).toBeGreaterThan(0);
-    expect(seen).toContain(`Current time: ${NOW}\\n\\nWhat accounts do I have?`);
+    expect(seen).toContain(`Current time: ${NOW}\\nFrom: Zed\\n\\nWhat accounts do I have?`);
   });
 
   test("auth marker in a tool result fails the turn with MonarchAuthError", async () => {

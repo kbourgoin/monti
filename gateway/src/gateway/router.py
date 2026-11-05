@@ -89,6 +89,7 @@ class Router:
             session_id=sid,
             message_id=str(uuid.uuid4()),
             text=text,
+            sender_name=self._owner,  # Task 3 replaces with the real name
             now=datetime.now(tz).replace(microsecond=0),
         )
         started = datetime.now(tz).isoformat()

@@ -15,7 +15,7 @@ describe("formatUserMessage matches python", () => {
     ["2026-11-04T22:00:00-0500", "2026-11-04T22:00:00-05:00"],
     ["2026-11-04", "2026-11-04T00:00:00"],
   ])("%s", (now, printed) => {
-    expect(formatUserMessage("hi", now)).toBe(`Current time: ${printed}\n\nhi`);
+    expect(formatUserMessage("hi", now, "Zed")).toBe(`Current time: ${printed}\nFrom: Zed\n\nhi`);
   });
 });
 
@@ -24,6 +24,7 @@ describe("parseTurnRequest", () => {
     session_id: "6f1c1d2e-0000-4000-8000-000000000001",
     message_id: "m1",
     text: "hello",
+    sender_name: "Zed",
     now: "2026-11-04T22:00:00-05:00",
   };
 
@@ -36,6 +37,7 @@ describe("parseTurnRequest", () => {
     ["not an object", "hi"],
     ["numeric session_id", { ...valid, session_id: 1 }],
     ["missing text", { ...valid, text: undefined }],
+    ["missing sender_name", { ...valid, sender_name: undefined }],
     ["bad now", { ...valid, now: "yesterday" }],
     ["impossible date", { ...valid, now: "2026-13-40T00:00:00Z" }],
     ["path traversal in session_id", { ...valid, session_id: "../../etc" }],
