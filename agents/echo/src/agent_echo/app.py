@@ -1,5 +1,6 @@
 """Echo agent: implements the turn contract with no LLM."""
 
+import os
 from collections import defaultdict
 
 import uvicorn
@@ -23,4 +24,4 @@ def turn(req: TurnRequest) -> TurnResponse:
 
 
 def main() -> None:
-    uvicorn.run(app, host="127.0.0.1", port=8201)
+    uvicorn.run(app, host=os.environ.get("AGENT_HOST", "127.0.0.1"), port=8201)

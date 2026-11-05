@@ -2,7 +2,10 @@
 name = "gateway"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["turn-contract"]
+dependencies = ["turn-contract", "httpx", "websockets"]
+
+[project.scripts]
+gateway = "gateway.app:main"
 
 [tool.uv.sources]
 turn-contract = { workspace = true }

@@ -1,0 +1,17 @@
+{
+  "envelope": {
+    "source": "+16175550100",
+    "sourceNumber": "+16175550100",
+    "sourceUuid": "uuid-sender",
+    "sourceName": "K",
+    "sourceDevice": 1,
+    "timestamp": 1730000000000,
+    "dataMessage": {
+      "timestamp": 1730000000000,
+      "message": "hi",
+      "expiresInSeconds": 0,
+      "viewOnce": false
+    }
+  },
+  "account": "+15553334444"
+}

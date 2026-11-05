@@ -1,6 +1,8 @@
 from typing import Protocol
 
-from turn_contract import Health, TurnRequest, TurnResponse
+import httpx
+from pydantic import ValidationError
+from turn_contract import ErrorResponse, Health, TurnRequest, TurnResponse
 
 
 class AgentTimeout(Exception):
@@ -22,3 +24,46 @@ class AgentPort(Protocol):
     async def turn(self, agent: str, req: TurnRequest) -> TurnResponse: ...
 
     async def health(self, agent: str) -> Health: ...
+
+
+class HttpAgentClient:
+    def __init__(self, agents: dict[str, str], timeout_s: float):
+        self.agents = agents
+        self._http = httpx.AsyncClient(timeout=timeout_s)
+
+    def _url(self, agent: str, path: str) -> str:
+        base = self.agents.get(agent)
+        if base is None:
+            raise AgentDown(agent)
+        return base.rstrip("/") + path
+
+    async def _request(self, agent: str, method: str, path: str, **kw) -> httpx.Response:
+        try:
+            resp = await self._http.request(method, self._url(agent, path), **kw)
+        except httpx.TimeoutException as e:
+            raise AgentTimeout(agent) from e
+        except httpx.HTTPError as e:
+            raise AgentDown(agent) from e
+        if resp.is_success:
+            return resp
+        try:
+            err = ErrorResponse.model_validate(resp.json()).error
+        except (ValueError, ValidationError):
+            raise AgentDown(f"{agent}: HTTP {resp.status_code}") from None
+        if err.code == "timeout":
+            raise AgentTimeout(agent)
+        raise AgentError(err.code, err.message)
+
+    async def turn(self, agent: str, req: TurnRequest) -> TurnResponse:
+        resp = await self._request(
+            agent,
+            "POST",
+            "/turn",
+            content=req.model_dump_json(),
+            headers={"content-type": "application/json"},
+        )
+        return TurnResponse.model_validate(resp.json())
+
+    async def health(self, agent: str) -> Health:
+        resp = await self._request(agent, "GET", "/health")
+        return Health.model_validate(resp.json())

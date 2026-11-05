@@ -155,8 +155,7 @@ async def test_monarch_auth_copy(r, fake):
 
 async def test_other_error_copy_and_logged(r, fake, settings):
     fake.exc = AgentError("internal", "boom")
-    out = await r.handle(inb())
-    assert len(out) == 1 and out[0]
+    assert await r.handle(inb()) == ["The pi agent is down."]
     assert rows(settings)[0][0] == "error"
 
 

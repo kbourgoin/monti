@@ -1,0 +1,55 @@
+name: chancellor
+
+services:
+  signal-cli:
+    image: bbernhard/signal-cli-rest-api:latest
+    restart: unless-stopped
+    environment:
+      MODE: json-rpc
+    volumes:
+      - ./data/signal:/home/.local/share/signal-cli
+    # No published ports. For registration see docs/runbooks/signal-registration.md.
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        PACKAGE: gateway
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      SIGNAL_URL: http://signal-cli:8080
+      DEFAULT_AGENT: echo
+      AGENTS: echo=http://agent-echo:8201
+      DB_PATH: /app/data/gateway.db
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - signal-cli
+      - agent-echo
+
+  agent-echo:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        PACKAGE: agent-echo
+    restart: unless-stopped
+    environment:
+      AGENT_HOST: 0.0.0.0
+
+  monarch-proxy:
+    build:
+      context: .
+      dockerfile: docker/python.Dockerfile
+      args:
+        PACKAGE: monarch-proxy
+    restart: unless-stopped
+    environment:
+      PROXY_HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:8100:8100"
+    volumes:
+      - ./data/monarch:/app/data/monarch
+      - ./data/logs:/app/data/logs

@@ -108,7 +108,7 @@ class Router:
             elif e.code == "monarch_auth":
                 out = [AUTH_COPY]
             else:
-                out = [f"The {agent} agent hit an error. Try again or /new."]
+                out = [f"The {agent} agent is down."]
         else:
             status = "ok"
             reply = resp.reply
