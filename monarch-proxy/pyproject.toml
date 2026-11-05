@@ -2,10 +2,11 @@
 name = "monarch-proxy"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = ["mcp", "httpx", "httpx2", "turn-contract"]
+dependencies = ["mcp>=2,<3", "httpx", "httpx2", "turn-contract", "uvicorn"]
 
 [project.scripts]
 monarch-login = "monarch_proxy.login:main"
+monarch-proxy = "monarch_proxy.server:main"
 
 [tool.uv.sources]
 turn-contract = { workspace = true }

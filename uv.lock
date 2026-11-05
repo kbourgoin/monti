@@ -418,14 +418,16 @@ dependencies = [
     { name = "httpx2" },
     { name = "mcp" },
     { name = "turn-contract" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "httpx" },
     { name = "httpx2" },
-    { name = "mcp" },
+    { name = "mcp", specifier = ">=2,<3" },
     { name = "turn-contract", editable = "contract" },
+    { name = "uvicorn" },
 ]
 
 [[package]]
