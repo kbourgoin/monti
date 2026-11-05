@@ -34,7 +34,7 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
    curl -X PUT http://127.0.0.1:8080/v1/profiles/$BOT_NUMBER \
      -H 'Content-Type: application/json' -d '{"name": "Monty"}'
    ```
-6. Remove the override file, then `docker compose down && make up`.
+6. Remove the override file, then `docker compose down && mise run up`.
 7. From your personal phone text the bot `hi`. Expect a typing indicator, then
    `echo: hi (turn 1)`. `/which` shows agent, session and model. Messages from other numbers
    or groups get no reply.
