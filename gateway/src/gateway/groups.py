@@ -31,14 +31,14 @@ def member_user(m: MemberRef, s: Settings) -> User | None:
         if m.number is not None:
             if m.number == u.number:
                 return u
-        elif m.uuid is not None and m.uuid == u.uuid:
+        elif m.uuid is not None and u.uuid is not None and m.uuid.lower() == u.uuid.lower():
             return u
     return None
 
 
 def is_bot(m: MemberRef, s: Settings) -> bool:
     return (m.number is not None and m.number == s.bot_number) or (
-        s.bot_uuid is not None and m.uuid == s.bot_uuid
+        s.bot_uuid is not None and m.uuid is not None and m.uuid.lower() == s.bot_uuid.lower()
     )
 
 
@@ -59,8 +59,10 @@ class MembershipGate:
         self.timeout_s = timeout_s
         self.clock = clock
         self._cache: dict[str, tuple[float, GroupInfo | None]] = {}
+        self._gen: dict[str, int] = {}  # bumped by invalidate; stale listings skip the cache
 
     def invalidate(self, group_id: str) -> None:
+        self._gen[group_id] = self._gen.get(group_id, 0) + 1
         self._cache.pop(group_id, None)
 
     async def lookup(self, group_id: str) -> GroupInfo | None:
@@ -70,10 +72,17 @@ class MembershipGate:
         hit = self._cache.get(group_id)
         if hit is not None and now - hit[0] < self.ttl_s:
             return hit[1]
+        gens = dict(self._gen)
         fresh = {g.id: g for g in await asyncio.wait_for(self.signal.list_groups(), self.timeout_s)}
+
+        def current(gid: str) -> bool:  # not invalidated while the listing was in flight
+            return self._gen.get(gid, 0) == gens.get(gid, 0)
+
         for gid, g in fresh.items():
-            self._cache[gid] = (now, g)
-        self._cache[group_id] = (now, fresh.get(group_id))  # an unknown group's "no" is cached too
+            if current(gid):
+                self._cache[gid] = (now, g)
+        if current(group_id):
+            self._cache[group_id] = (now, fresh.get(group_id))  # an unknown group's "no" is cached too
         return fresh.get(group_id)
 
     def outsiders(self, group: GroupInfo) -> list[MemberRef]:

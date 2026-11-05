@@ -26,7 +26,8 @@ Design: `docs/superpowers/specs/2026-11-04-signal-monarch-agent-design.md`, amen
 1. Configure: `cp .env.example .env`, then fill in `ANTHROPIC_API_KEY`, `USERS` (see below),
    `BOT_NUMBER` (the bot's number, E.164), and optionally `BOT_UUID`, `MODEL` and
    `DEFAULT_AGENT` (`echo`, `pi` or `deep`). `OWNER_NUMBER` and `OWNER_UUID` are gone: if your
-   `.env` predates `USERS`, replace them with a `USERS` line, or the gateway won't start.
+   `.env` predates `USERS`, replace them with a `USERS` line, or the gateway won't start. When
+   upgrading from v1, also clear `data/gateway/` (or `rm -rf data`) before the first run.
 2. Log in to Monarch: `mise run monarch-login`. It opens the OAuth flow (loopback on port 8765) and
    stores tokens in `data/monarch/tokens.json`. Check them later, non-interactively, with
    `uv run monarch-login --check`.

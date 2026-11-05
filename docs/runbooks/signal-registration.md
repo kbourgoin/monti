@@ -37,7 +37,7 @@ One-time setup for the bot's Signal number (`BOT_NUMBER`, the Tello SIM). Do thi
    ```
 6. Remove the override file, then `docker compose down && mise run up`.
 7. From your personal phone text the bot `hi`. Expect a typing indicator, then
-   `echo: hi (turn 1)` (with `/agent echo`). `/which` shows agent, session and model. Messages
+   `echo (Keith): hi (turn 1)` (with `/agent echo`). `/which` shows agent, session and model. Messages
    from numbers not in `USERS` get no reply.
 
 Registration state lives in `data/signal/` (gitignored). Back it up; losing it means

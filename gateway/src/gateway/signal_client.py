@@ -82,9 +82,11 @@ def parse_envelope(msg: dict) -> Inbound | None:
     text = data.get("message")
     if not isinstance(text, str) or not text:
         return None
-    group = data.get("groupInfo") or data.get("groupV2")
+    group = data.get("groupInfo")
+    if group is None:
+        group = data.get("groupV2")
     group_id: str | None = None
-    if group:
+    if group is not None:
         # A group frame with no usable id is still a group (never a DM); the gate denies "".
         gid = group.get("groupId") or group.get("id") if isinstance(group, dict) else None
         group_id = gid if isinstance(gid, str) else ""

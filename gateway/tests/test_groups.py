@@ -353,3 +353,59 @@ async def test_gateway_routes_group_update_to_events(settings):
     await gw.drain()
     assert sig.joined == [G1]
     assert sig.calls == []
+
+
+async def test_outsider_added_mid_turn_blocks_reply(settings):
+    release = asyncio.Event()
+    started = asyncio.Event()
+
+    class Blocking(FakeAgents):
+        async def turn(self, agent, req):
+            started.set()
+            await release.wait()
+            return await super().turn(agent, req)
+
+    sig = FakeSignal()
+    gate = MembershipGate(sig, settings)
+    gw = Gateway(
+        settings, sig, router_for(settings, gate, Blocking()), GroupEvents(sig, settings, gate)
+    )
+    gw.submit(group_frame("q"))
+    await asyncio.wait_for(started.wait(), 1)
+    sig.groups = [GroupInfo(G1, g1().members + [M(OUTSIDER, None)], True, [])]
+    gw.submit(json.loads((FIX / "group_update.json").read_text()))  # invalidates synchronously
+    release.set()
+    await gw.drain()
+    assert [c for c in sig.calls if c[0] == "send"] == []
+
+
+async def test_inflight_listing_does_not_repopulate_invalidated_group(settings):
+    sig = FakeSignal(delay=0.05)
+    gate = MembershipGate(sig, settings)
+    task = asyncio.create_task(gate.lookup(G1))
+    await asyncio.sleep(0.01)
+    gate.invalidate(G2)
+    await task
+    assert G2 not in gate._cache
+    assert G1 in gate._cache
+
+
+async def test_uuid_only_sender_in_outsider_group_silent(settings):
+    agents = FakeAgents()
+    r = router_for(settings, MembershipGate(FakeSignal(), settings), agents)
+    assert await r.handle(ginb(number=None, uuid="uuid-alex", group=G2)) is None
+    assert agents.calls == []
+
+
+async def test_uppercase_uuid_in_users_matches(settings):
+    s = dataclasses.replace(
+        settings, users=(User("Keith", KEITH, "uuid-keith"), User("Alex", ALEX, "uuid-alex"))
+    )
+    from gateway.config import parse_users
+
+    users = parse_users(f"Keith={KEITH}/UUID-KEITH,Alex={ALEX}/UUID-ALEX")
+    s = dataclasses.replace(s, users=users, bot_uuid="uuid-bot")
+    gate = MembershipGate(FakeSignal(), s)
+    assert await gate.allowed(G1) is True  # member uuid-alex matches UUID-ALEX
+    r = router_for(s, gate)
+    assert await r.handle(ginb(number=None, uuid="UUID-Alex")) is not None

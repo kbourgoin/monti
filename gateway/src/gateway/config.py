@@ -49,7 +49,7 @@ def parse_users(raw: str) -> tuple[User, ...]:
         number, uuid = number.strip(), uuid.strip()
         if not eq or not name or not _NUMBER.match(number) or (slash and not uuid):
             raise ValueError(f"malformed USERS entry {item!r}; expected Name=+E164[/uuid]")
-        users.append(User(name, number, uuid or None))
+        users.append(User(name, number, uuid.lower() or None))
     if not users:
         raise ValueError("USERS is empty; expected Name=+E164[/uuid],...")
     names = [u.name for u in users]
@@ -73,5 +73,5 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         agents=agents,
         default_agent=default_agent,
         db_path=Path(env.get("DB_PATH", "data/gateway/gateway.db")),
-        bot_uuid=env.get("BOT_UUID", "").strip() or None,
+        bot_uuid=env.get("BOT_UUID", "").strip().lower() or None,
     )

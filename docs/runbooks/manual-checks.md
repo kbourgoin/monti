@@ -6,9 +6,9 @@ says otherwise; section 7 also needs a second person in `USERS` (Alex below) and
 
 ## 1. Basics (echo)
 
-1. Send `/agent echo`, then `hi`. Expect a typing indicator, then `echo: hi (turn 1)`.
+1. Send `/agent echo`, then `hi`. Expect a typing indicator, then `echo (Keith): hi (turn 1)`.
 2. Send `/which`. Expect agent `echo`, a session id, and a model line.
-3. Send `/new`, then `hi`. Expect `Started a new session with echo.` then `echo: hi (turn 1)`.
+3. Send `/new`, then `hi`. Expect `Started a new session with echo.` then `echo (Keith): hi (turn 1)`.
 4. Send `/help`. Expect the four commands. Send `/agent nope`. Expect an error listing valid agents.
 
 ## 2. Pi
@@ -106,5 +106,7 @@ man page, not against a live server. While doing section 7, confirm:
   what `POST /v1/groups/<bot>/<group.id>/join` runs). The gateway assumes an invite reaches the bot
   as a `groupInfo.type: "UPDATE"` data message with no text, sent by the inviter. If no such frame
   arrives, step 8 fails: accept by hand as in the registration runbook and tell the builder.
+- **Group listing `member` field.** If the group listing has no `member` field, every group logs
+  "bot is not a full member" and Monty stays silent in all groups; report it to the builder.
 - **Profile sharing.** DMing the bot before adding it lets Signal add it directly rather than
   invite it. If adding always produces an invite, that's fine as long as step 8 passes.

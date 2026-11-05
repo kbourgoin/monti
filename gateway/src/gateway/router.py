@@ -66,10 +66,12 @@ class GroupGate(Protocol):
 
 def match_user(inb: Inbound, s: Settings) -> User | None:
     for u in s.users:
-        if inb.sender_number is not None and inb.sender_number == u.number:
-            return u
-        if u.uuid is not None and inb.sender_uuid == u.uuid:
-            return u
+        if inb.sender_number is not None:
+            if inb.sender_number == u.number:
+                return u
+        elif u.uuid is not None and inb.sender_uuid is not None:
+            if inb.sender_uuid.lower() == u.uuid.lower():
+                return u
     return None
 
 

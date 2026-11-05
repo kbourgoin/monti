@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from .agent_client import HttpAgentClient
 from .config import Settings, load_settings
 from .groups import GroupEvents, MembershipGate
-from .router import Inbound, Recipient, Router, chat_id, match_user
+from .router import GroupRecipient, Inbound, Recipient, Router, chat_id, match_user
 from .signal_client import SignalClient, parse_envelope, parse_group_update
 from .store import Store
 
@@ -55,6 +55,7 @@ class Gateway:
             return
         if update is not None:
             if self.groups is not None:
+                self.groups.gate.invalidate(update.group_id)  # now, not when the job runs
                 groups = self.groups
                 self._enqueue(f"group:{update.group_id}", lambda: groups.on_update(update))
             return
@@ -77,6 +78,10 @@ class Gateway:
         try:
             reply = await self.router.handle(inb, start_typing)
             if reply is not None:
+                if isinstance(reply.recipient, GroupRecipient) and not await self._still_allowed(
+                    reply.recipient.group_id
+                ):
+                    return
                 for part in reply.messages:
                     await self.signal.send(reply.recipient, part)
         except Exception:
@@ -87,6 +92,20 @@ class Gateway:
                     await self.signal.typing(typing_to, False)
                 except Exception:
                     log.warning("turning the typing indicator off failed", exc_info=True)
+
+    async def _still_allowed(self, group_id: str) -> bool:
+        """Membership may have changed during the turn; re-check before speaking."""
+        gate = getattr(self.router, "gate", None)
+        if gate is None:
+            return True
+        try:
+            if await gate.allowed(group_id):
+                return True
+        except Exception:
+            log.exception("group re-check failed; dropping reply (fail-closed)")
+            return False
+        log.info("group %s no longer allowed; dropping reply", group_id)
+        return False
 
     def _enqueue(self, key: str, job: Job) -> None:
         q = self._queues.setdefault(key, asyncio.Queue())

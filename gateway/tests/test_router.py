@@ -274,3 +274,11 @@ async def test_turn_logged(r, fake, settings):
 async def test_commands_not_logged(r, settings):
     await ask(r, inb("/new"))
     assert rows(settings) == []
+
+
+async def test_known_uuid_with_unknown_number_does_not_match(settings):
+    assert match_user(inb(number="+19995550000", uuid="uuid-owner"), settings) is None
+
+
+async def test_uuid_match_is_case_insensitive(settings):
+    assert match_user(inb(number=None, uuid="UUID-OWNER"), settings).name == "Keith"

@@ -206,3 +206,9 @@ async def test_join_group():
     route = respx.post(f"{BASE}/v1/groups/+1bot/{G1_REST}/join").respond(204)
     await SignalClient(BASE, "+1bot").join_group(G1)
     assert route.called
+
+
+def test_empty_group_info_is_a_group_not_a_dm():
+    msg = {"envelope": {"sourceNumber": "+16175550100", "dataMessage": {"message": "hi", "groupInfo": {}}}}
+    inb = parse_envelope(msg)
+    assert inb is not None and inb.group_id == "" and inb.is_group is True
