@@ -138,7 +138,9 @@ export class SessionStore {
           usage.output_tokens += u.output;
         }
       });
-      const abort = () => void session.abort();
+      const abort = () => {
+        session.abort().catch((err) => console.warn(`abort of session ${req.session_id} failed:`, err));
+      };
       signal?.addEventListener("abort", abort, { once: true });
       try {
         await session.prompt(formatUserMessage(req.text, req.now), { expandPromptTemplates: false });
