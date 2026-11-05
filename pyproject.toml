@@ -2,10 +2,10 @@
 name = "mm-text"
 version = "0.0.0"
 requires-python = ">=3.12"
-dependencies = ["monarch-proxy", "turn-contract", "agent-echo"]
+dependencies = ["monarch-proxy", "turn-contract", "agent-echo", "gateway"]
 
 [tool.uv.workspace]
-members = ["contract", "monarch-proxy", "agents/echo"]
+members = ["contract", "monarch-proxy", "agents/echo", "gateway"]
 
 [dependency-groups]
 dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
@@ -13,7 +13,7 @@ dev = ["pytest", "pytest-asyncio", "respx", "ruff"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-testpaths = ["monarch-proxy/tests", "contract/tests", "agents/echo/tests"]
+testpaths = ["monarch-proxy/tests", "contract/tests", "agents/echo/tests", "gateway/tests"]
 
 [tool.ruff]
 line-length = 100
@@ -22,3 +22,4 @@ line-length = 100
 monarch-proxy = { workspace = true }
 turn-contract = { workspace = true }
 agent-echo = { workspace = true }
+gateway = { workspace = true }
