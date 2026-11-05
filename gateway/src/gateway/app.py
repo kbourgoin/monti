@@ -95,11 +95,8 @@ class Gateway:
 
     async def _still_allowed(self, group_id: str) -> bool:
         """Membership may have changed during the turn; re-check before speaking."""
-        gate = getattr(self.router, "gate", None)
-        if gate is None:
-            return True
         try:
-            if await gate.allowed(group_id):
+            if await self.router.gate.allowed(group_id):
                 return True
         except Exception:
             log.exception("group re-check failed; dropping reply (fail-closed)")
