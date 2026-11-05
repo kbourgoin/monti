@@ -72,3 +72,25 @@ async def test_health_down(client):
 async def test_unknown_agent(client):
     with pytest.raises(AgentDown):
         await client.turn("nope", REQ)
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "kw",
+    [
+        {"json": {"unexpected": "shape"}},  # ValidationError: reply missing
+        {"json": {"reply": 42}},  # ValidationError: wrong type
+        {"text": "<html>not json</html>"},  # ValueError: not JSON
+    ],
+)
+async def test_malformed_200_body_is_down(client, kw):
+    respx.post(f"{URL}/turn").respond(200, **kw)
+    with pytest.raises(AgentDown):
+        await client.turn("echo", REQ)
+
+
+@respx.mock
+async def test_malformed_200_health_is_down(client):
+    respx.get(f"{URL}/health").respond(200, json={"name": "echo"})
+    with pytest.raises(AgentDown):
+        await client.health("echo")

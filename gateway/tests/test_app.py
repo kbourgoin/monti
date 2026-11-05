@@ -111,3 +111,36 @@ async def test_run_survives_handler_error(settings):
     sig, router = Sig(), FakeRouter(exc=RuntimeError("boom"))
     await Gateway(settings, sig, router).run()
     assert [e for e in router.events if e[0] == "start"] == [("start", "a"), ("start", "b")]
+
+
+WEIRD_FRAMES = [
+    None,
+    "not a dict",
+    ["a", "list"],
+    42,
+    {"envelope": {"sourceNumber": OWNER, "dataMessage": {"message": "hi", "groupInfo": object}}},
+    {"envelope": {"sourceNumber": ["x"], "dataMessage": {"message": "hi"}}},
+]
+
+
+@pytest.mark.parametrize("frame", WEIRD_FRAMES)
+async def test_malformed_frame_logged_and_skipped(settings, caplog, frame):
+    sig = FakeSignal()
+    with caplog.at_level(logging.WARNING):
+        await Gateway(settings, sig, FakeRouter()).on_message(frame)  # must not raise
+    assert not [c for c in sig.calls if c[0] == "send"]
+    if not isinstance(frame, dict):
+        assert any("malformed Signal frame" in r.getMessage() for r in caplog.records)
+
+
+async def test_run_survives_malformed_frame(settings, caplog):
+    class Sig(FakeSignal):
+        async def receive(self):
+            yield "garbage"
+            yield raw("b")
+
+    sig, router = Sig(), FakeRouter()
+    with caplog.at_level(logging.ERROR):
+        await Gateway(settings, sig, router).run()
+    assert router.events == [("start", "b"), ("end", "b")]
+    assert any("malformed Signal frame" in r.getMessage() for r in caplog.records)

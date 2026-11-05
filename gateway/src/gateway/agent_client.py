@@ -1,7 +1,7 @@
 from typing import Protocol
 
 import httpx
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from turn_contract import ErrorResponse, Health, TurnRequest, TurnResponse
 
 
@@ -62,8 +62,16 @@ class HttpAgentClient:
             content=req.model_dump_json(),
             headers={"content-type": "application/json"},
         )
-        return TurnResponse.model_validate(resp.json())
+        return _parse(agent, TurnResponse, resp)
 
     async def health(self, agent: str) -> Health:
         resp = await self._request(agent, "GET", "/health")
-        return Health.model_validate(resp.json())
+        return _parse(agent, Health, resp)
+
+
+def _parse[M: BaseModel](agent: str, model: type[M], resp: httpx.Response) -> M:
+    """A 2xx whose body is not the contract's shape means the agent is broken: treat it as down."""
+    try:
+        return model.model_validate(resp.json())
+    except (ValueError, ValidationError):
+        raise AgentDown(f"{agent}: malformed {model.__name__} body") from None

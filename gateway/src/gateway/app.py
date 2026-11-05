@@ -23,11 +23,15 @@ class Gateway:
             await self.on_message(raw)
 
     async def on_message(self, raw: dict) -> None:
-        inb = parse_envelope(raw)
-        if inb is None:
-            return
-        if inb.is_group or not is_owner(inb, self.s):
-            log.debug("dropping message from non-owner or group")
+        try:
+            inb = parse_envelope(raw)
+            if inb is None:
+                return
+            if inb.is_group or not is_owner(inb, self.s):
+                log.debug("dropping message from non-owner or group")
+                return
+        except Exception:
+            log.exception("skipping malformed Signal frame (%s)", type(raw).__name__)
             return
         recipient = self.s.owner_number
         async with self._locks.setdefault(recipient, asyncio.Lock()):
