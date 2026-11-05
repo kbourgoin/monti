@@ -2,7 +2,10 @@
 name = "turn-contract"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["pydantic>=2", "fastapi", "mcp>=2,<3", "uvicorn", "httpx"]
+
+[project.scripts]
+fake-monarch = "turn_contract.fake_monarch:main"
 
 [build-system]
 requires = ["hatchling"]
