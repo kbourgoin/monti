@@ -8,6 +8,7 @@ from typing import Any
 
 from mcp import types
 from mcp.server.lowlevel import Server
+from mcp.shared.exceptions import MCPError
 from turn_contract import AUTH_ERROR_MARKER
 
 from monarch_proxy.allowlist import is_allowed
@@ -26,7 +27,11 @@ def _error(text: str) -> types.CallToolResult:
 
 def build_server(upstream: Upstream, call_log: CallLog) -> Server:
     async def on_list_tools(ctx: Any, params: Any) -> types.ListToolsResult:
-        tools = [t for t in await upstream.list_tools() if is_allowed(t.name)]
+        try:
+            upstream_tools = await upstream.list_tools()
+        except MonarchAuthRequired:
+            raise MCPError(types.INTERNAL_ERROR, f"{AUTH_ERROR_MARKER}: run make monarch-login")
+        tools = [t for t in upstream_tools if is_allowed(t.name)]
         return types.ListToolsResult(tools=tools)
 
     async def on_call_tool(ctx: Any, params: types.CallToolRequestParams) -> types.CallToolResult:

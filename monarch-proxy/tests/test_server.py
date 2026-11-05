@@ -2,6 +2,7 @@ import json
 
 import pytest
 from mcp import Client, types
+from mcp.shared.exceptions import MCPError
 from monarch_proxy.auth import MonarchAuthRequired
 from monarch_proxy.calllog import CallLog
 from monarch_proxy.server import build_server
@@ -70,3 +71,16 @@ async def test_auth_failure_returns_marker(fake, tmp_path):
     assert r.content[0].text == "MONARCH_AUTH_REQUIRED: run make monarch-login"
     line = json.loads((tmp_path / "calls.jsonl").read_text().splitlines()[-1])
     assert line["ok"] is False
+
+
+async def test_list_auth_failure_error_contains_marker(fake, tmp_path):
+    fake.raise_auth = True
+
+    async def list_tools():
+        raise MonarchAuthRequired("expired")
+
+    fake.list_tools = list_tools
+    async with connect(fake, tmp_path) as client:
+        with pytest.raises(MCPError) as exc:
+            await client.list_tools()
+    assert AUTH_ERROR_MARKER in str(exc.value)

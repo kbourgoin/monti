@@ -32,6 +32,7 @@ class MonarchUpstream:
     login surfaces as MonarchAuthRequired (after one forced token refresh)."""
 
     def __init__(self, storage: FileTokenStorage) -> None:
+        self._storage = storage
         self._provider = make_provider(storage, interactive=False)
         self._session: ClientSession | None = None
         self._lock = asyncio.Lock()
@@ -57,6 +58,9 @@ class MonarchUpstream:
         # on many tasks, so a dedicated task owns the connection for its whole life.
         if self._session is not None:
             return self._session
+        if await self._storage.get_tokens() is None:
+            # No login: stay fully offline. Registration/authorization is the login CLI's job.
+            raise MonarchAuthRequired("No stored Monarch tokens")
         ready: asyncio.Future[ClientSession] = asyncio.get_running_loop().create_future()
         self._stop = stop = asyncio.Event()
 
