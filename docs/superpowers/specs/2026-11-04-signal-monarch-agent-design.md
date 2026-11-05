@@ -1,4 +1,4 @@
-# Signal ↔ Monarch Agent — Design
+# Monty — Design
 
 Date: 2026-11-04
 Status: Draft, awaiting approval
