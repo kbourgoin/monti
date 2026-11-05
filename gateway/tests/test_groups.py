@@ -261,6 +261,58 @@ async def test_update_invalidates_membership_cache(settings):
     assert await gate.allowed(G1) is False
 
 
+async def test_invite_ignored_when_outsider_is_member(settings):
+    # An outsider made the group and invited Monty; Keith's later rename must not make Monty join.
+    sig = FakeSignal([GroupInfo(G1, [M(KEITH), M(OUTSIDER)], False, [M(BOT)])])
+    events = GroupEvents(sig, settings, MembershipGate(sig, settings))
+    await events.on_update(GroupUpdate(KEITH, "uuid-keith", G1))
+    assert sig.joined == []
+
+
+async def test_invite_ignored_when_outsider_also_pending(settings):
+    sig = FakeSignal([GroupInfo(G1, [M(KEITH)], False, [M(BOT), M(None, "uuid-stranger")])])
+    events = GroupEvents(sig, settings, MembershipGate(sig, settings))
+    await events.on_update(GroupUpdate(KEITH, "uuid-keith", G1))
+    assert sig.joined == []
+
+
+async def test_no_join_when_bot_not_pending(settings):
+    # e.g. a user removed Monty: not a member, and not invited either.
+    sig = FakeSignal([GroupInfo(G1, [M(KEITH), M(None, "uuid-alex")], False, [])])
+    events = GroupEvents(sig, settings, MembershipGate(sig, settings))
+    await events.on_update(GroupUpdate(KEITH, "uuid-keith", G1))
+    assert sig.joined == []
+
+
+async def test_invite_all_users_bot_pending_joined(settings):
+    sig = FakeSignal([GroupInfo(G1, [M(KEITH), M(None, "uuid-alex")], False, [M(BOT, "uuid-bot")])])
+    events = GroupEvents(sig, settings, MembershipGate(sig, settings))
+    await events.on_update(GroupUpdate(None, "uuid-alex", G1))
+    assert sig.joined == [G1]
+
+
+async def test_join_refreshes_gate(settings):
+    class Joining(FakeSignal):
+        async def join_group(self, group_id):
+            await super().join_group(group_id)
+            self.groups = [GroupInfo(G1, [M(KEITH), M(BOT)], True, [])]
+
+    sig = Joining([GroupInfo(G1, [M(KEITH)], False, [M(BOT)])])
+    gate = MembershipGate(sig, settings)
+    await GroupEvents(sig, settings, gate).on_update(GroupUpdate(KEITH, "uuid-keith", G1))
+    assert sig.joined == [G1]
+    assert await gate.allowed(G1) is True  # not the pre-join "invited only" snapshot
+
+
+async def test_invite_lookup_timeout_fails_closed(settings, caplog):
+    sig = FakeSignal([GroupInfo(G1, [M(KEITH)], False, [M(BOT)])], delay=1.0)
+    events = GroupEvents(sig, settings, MembershipGate(sig, settings, timeout_s=0.05))
+    with caplog.at_level(logging.WARNING):
+        await asyncio.wait_for(events.on_update(GroupUpdate(KEITH, None, G1)), timeout=0.5)
+    assert sig.joined == []
+    assert any("invite" in r.getMessage() for r in caplog.records)
+
+
 async def test_invite_lookup_failure_logged(settings, caplog):
     sig = FakeSignal(exc=RuntimeError("down"))
     events = GroupEvents(sig, settings, MembershipGate(sig, settings))

@@ -75,9 +75,13 @@ Use `/agent echo` in each chat first, so the turn counter shows which conversati
    multi-step one from section 3), and while Monty is typing there send `/which` in your DM. The DM
    answer arrives without waiting for the group.
 7. **Order within a chat.** In one group send `one` then `two` quickly (echo). Answers come in order.
-8. **Invites.** If Signal only invited Monty in any step above, confirm the invite was accepted
-   automatically for Keith's invite (log line `accepted group invite`), and that an invite sent
-   by the outsider stays pending (Monty never joins or speaks there).
+8. **Invites.** If Signal only invited Monty in any step above, confirm:
+   - in an all-`USERS` group, Keith's invite is accepted automatically (log line
+     `accepted group invite`);
+   - in a group with the outsider in it, the invite stays pending even when Keith (not the
+     outsider) invites Monty or renames the group (log line `left pending`); Monty never joins
+     or speaks there;
+   - after Monty is removed from a group, a later change there doesn't make it rejoin.
 
 ### signal-cli REST assumptions to confirm
 

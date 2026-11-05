@@ -63,7 +63,9 @@ class MembershipGate:
     def invalidate(self, group_id: str) -> None:
         self._cache.pop(group_id, None)
 
-    async def _lookup(self, group_id: str) -> GroupInfo | None:
+    async def lookup(self, group_id: str) -> GroupInfo | None:
+        """The group as last listed (cached for `ttl_s`), or None if signal-cli doesn't know it.
+        Raises on a failed or slow (`timeout_s`) listing; failures are not cached."""
         now = self.clock()
         hit = self._cache.get(group_id)
         if hit is not None and now - hit[0] < self.ttl_s:
@@ -74,11 +76,19 @@ class MembershipGate:
         self._cache[group_id] = (now, fresh.get(group_id))  # an unknown group's "no" is cached too
         return fresh.get(group_id)
 
+    def outsiders(self, group: GroupInfo) -> list[MemberRef]:
+        """Members and pending members, other than the bot, who aren't users."""
+        return [
+            m
+            for m in group.members + group.pending
+            if not is_bot(m, self.s) and member_user(m, self.s) is None
+        ]
+
     async def allowed(self, group_id: str) -> bool:
         if not group_id:
             return False
         try:
-            group = await self._lookup(group_id)
+            group = await self.lookup(group_id)
         except Exception as e:
             # Timeouts included. Failures aren't cached, so the next message retries.
             log.warning(
@@ -94,11 +104,7 @@ class MembershipGate:
         if not group.is_member:
             log.info("bot is not a full member of group %s; staying silent", group_id)
             return False
-        outsiders = [
-            m
-            for m in group.members + group.pending
-            if not is_bot(m, self.s) and member_user(m, self.s) is None
-        ]
+        outsiders = self.outsiders(group)
         if outsiders:
             log.info(
                 "group %s has %d member(s) not in USERS; staying silent", group_id, len(outsiders)
@@ -108,11 +114,13 @@ class MembershipGate:
 
 
 class GroupEvents:
-    """Handles group-change frames: refresh the gate, and accept invites sent by a user.
+    """Handles group-change frames: refresh the gate, and accept invites from users.
 
-    signal-cli does not accept group invites on its own (`updateGroup -g` accepts one),
-    so an invite from someone in USERS is accepted here. Invites from anyone else are
-    left pending. Speaking is still decided by the gate either way.
+    signal-cli does not accept group invites on its own (`updateGroup -g` accepts one).
+    It also doesn't record who invited the bot, so "the invite came from a user" is
+    approximated as: a user sent this group change, the bot is pending, and everyone
+    else in the group (members and pending) is a user. Otherwise the invite is left
+    pending. Speaking is still decided by the gate either way.
     """
 
     def __init__(self, signal: GroupJoiner, settings: Settings, gate: MembershipGate):
@@ -128,12 +136,20 @@ class GroupEvents:
         if sender is None:
             return
         try:
-            groups = await self.signal.list_groups()
-            group = next((g for g in groups if g.id == upd.group_id), None)
+            group = await self.gate.lookup(upd.group_id)  # fresh (just invalidated), with timeout
             if group is None or group.is_member:
                 return
+            if not any(is_bot(m, self.s) for m in group.pending):
+                log.info("group %s changed but the bot isn't invited; not joining", upd.group_id)
+                return
+            if self.gate.outsiders(group):
+                log.info(
+                    "group invite to %s left pending: not everyone there is in USERS", upd.group_id
+                )
+                return
             await self.signal.join_group(upd.group_id)
-            log.info("accepted group invite to %s from %s", upd.group_id, sender.name)
+            self.gate.invalidate(upd.group_id)  # drop the "only invited" snapshot
+            log.info("accepted group invite to %s (change sent by %s)", upd.group_id, sender.name)
         except Exception as e:
             log.warning(
                 "could not check or accept group invite for %s (%r)", upd.group_id, e, exc_info=True

@@ -56,9 +56,12 @@ security rule in `README.md`). To add it:
 3. Send a message in the group. Expect a typing indicator and a reply.
 
 If Signal could only *invite* the bot (it shows as "invited"/pending), the gateway accepts the
-invite on its own when the change came from someone in `USERS`; invites from anyone else are
-left pending. Group changes reach the bot as signal-cli "UPDATE" messages, and the gateway checks
-the group list and calls the join endpoint for the inviter's group.
+invite on its own, but only when all of these hold: the group change was sent by someone in
+`USERS`, the bot is listed as invited, and everyone else in the group (members and anyone else
+invited or asking to join) is in `USERS`. Otherwise the invite stays pending. signal-cli doesn't
+record who sent an invite, so this stands in for "invited by a user": Monty never joins a group
+that has an outsider in it, whoever invited it. Group changes reach the bot as signal-cli
+"UPDATE" messages; the gateway then re-reads the group list and calls the join endpoint.
 
 If the bot still shows as pending after a minute, accept by hand (temporary loopback publish as in
 step 2 above):
