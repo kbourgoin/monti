@@ -56,7 +56,7 @@ My phone (Signal)
       │
 signal-cli  (Docker; registered to the Tello number)
       │  REST + websocket (or JSON-RPC)
-Gateway  (TypeScript, Bun)
+Gateway  (Python, asyncio)
   - allowlist, chat commands, session routing, transcript log (SQLite)
       │  HTTP turn contract
  ┌────┴──────────────┐
@@ -74,13 +74,19 @@ exposed publicly; signal-cli only makes outbound connections.
 
 ### Repo layout
 
+Python everywhere except `agents/pi/`, which has to be TypeScript because Pi only
+ships a TypeScript SDK. The Python packages form a single uv workspace at the
+repo root (shared dev tooling: pytest, ruff); the turn contract is the only
+thing `agents/pi/` shares with the rest.
+
 ```
 mm-text/
-  gateway/          TypeScript (Bun)
+  gateway/          Python (uv)
   agents/pi/        TypeScript (Node), Pi SDK
   agents/deep/      Python (uv), deepagents + langchain-mcp-adapters, FastAPI
-  agents/echo/      trivial reference agent (tests, signal bring-up)
+  agents/echo/      Python (uv), trivial reference agent (tests, signal bring-up)
   monarch-proxy/    Python (uv)
+  pyproject.toml    uv workspace root (members: gateway, agents/deep, agents/echo, monarch-proxy)
   prompts/system.md shared system prompt used by every agent
   data/             gitignored: tokens, SQLite, agent memory, logs
   docker-compose.yml
@@ -99,7 +105,7 @@ mm-text/
   choice. Using signal-cli's native JSON-RPC/SSE daemon instead is the builder's call.
 - Keep the image current, since old signal-cli versions break when Signal's API changes.
 
-### 2. Gateway (TypeScript / Bun)
+### 2. Gateway (Python)
 
 Responsibilities:
 - Receive incoming messages and drop anything not from `OWNER_NUMBER`, or from a group.
