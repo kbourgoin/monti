@@ -47,9 +47,13 @@ class MonarchUpstream:
         self._ended_with: BaseException | None = None
 
     async def __aenter__(self) -> Self:
-        try:
+        async def connect() -> None:
             async with self._lock:
                 await self._connect()
+
+        try:
+            # An access token that expired while the proxy was down is refreshed here, as on calls.
+            await with_refresh_retry(self._provider, connect)
         except Exception as exc:
             if not is_auth_required(exc):
                 raise
